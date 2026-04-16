@@ -1,0 +1,47 @@
+version: "3.8"
+services:
+  kafka:
+    image: bitnamilegacy/kafka:3.7
+    container_name: kafka
+    ports:
+      - "29092:29092"   # external client access
+    environment:
+      KAFKA_CFG_NODE_ID: 1
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,OUTSIDE://:29092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,OUTSIDE://localhost:29092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    volumes:
+      - kafka_data:/bitnami/kafka
+
+  # Optional: Open-source schema registry (Confluent-compatible API)
+  apicurio:
+    image: quay.io/apicurio/apicurio-registry-mem:latest
+    container_name: apicurio
+    ports:
+      - "8081:8080"   # expose registry (UI will use compat endpoint)
+    depends_on:
+      - kafka
+
+  # Open-source Kafka UI (Provectus)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      # If using Apicurio, point to its Confluent-compatible endpoint:
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://apicurio:8080/apis/ccompat/v6
+    depends_on:
+      - kafka
+      - apicurio
+volumes:
+  kafka_data:

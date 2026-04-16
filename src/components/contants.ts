@@ -1,0 +1,1 @@
+export const INPUT_CLASS = `placeholder:text-opposite/60 block w-full rounded-md border-0  bg-main  pl-1 py-2  text-opposite shadow-sm ring-1 ring-inset ring-opposite/20 focus:outline-none focus:ring-2 focus:ring-indigo-500   sm:text-sm text-xs sm:leading-6 h-10`;
