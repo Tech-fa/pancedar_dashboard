@@ -1,24 +1,16 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import HomeView from "@/components/HomeView.vue";
-import DashboardView from "@/components/dashboard/index.vue";
 import { AuthRoutes } from "@/components/auth/routes";
 import { usersRoutes } from "@/components/admin/users/routes";
 import { ref } from "vue";
 import { permissionsRoutes } from "@/components/admin/permissions/routes";
 import ProfileView from "@/components/profile/Profile.vue";
 import NotificationsView from "@/components/UserNotification.vue";
-import { mapRoutes } from "@/components/map/routes";
-import { fleetRoutes } from "@/components/fleet/routes";
 import { accountRoutes } from "@/components/admin/account/routes";
 import { teamsRoutes } from "@/components/admin/teams/routes";
-import { operationsRoutes } from "@/components/operations/routes";
-import { documentRoutes } from "@/components/document/routes";
-import { customerRoutes } from "@/components/customers/routes";
-import { complianceRoutes } from "@/components/compliance/routes";
-import { reportsRoutes } from "@/components/reports/routes";
 import { automationRoutes } from "@/components/automation/routes";
-import { operationConfigRoutes } from "@/components/operation-config/routes";
+import { categoriesRoutes } from "@/components/automation/categories/routes";
 // Create a reactive loading state that can be imported in other components
 export const isRouteChanging = ref(false);
 
@@ -32,8 +24,8 @@ const router = createRouter({
       children: [
         {
           path: "",
-          name: "Dashboard",
-          redirect: "/fleet/dashboard",
+          name: "Main",
+          redirect: "/profile",
         },
 
         { path: "profile", name: "Profile", component: ProfileView },
@@ -47,20 +39,8 @@ const router = createRouter({
         ...permissionsRoutes,
         ...accountRoutes,
         ...teamsRoutes,
-        ...mapRoutes,
-        // ...alertsRoutes,
-        // ...servicesRoutes,
-        // ...inventoryRoutes,
-        ...fleetRoutes,
-        ...operationsRoutes,
-        ...complianceRoutes,
-        ...documentRoutes,
-        // ...trainingRoutes,
-        // ...auditRoutes,
-        ...customerRoutes,
-        ...reportsRoutes,
         ...automationRoutes,
-        ...operationConfigRoutes,
+        ...categoriesRoutes,
       ],
     },
 

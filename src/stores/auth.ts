@@ -3,7 +3,6 @@ import { getRootUnits, parseJwt } from "@/util/util";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 export interface UserDetails {
-  isCompliant: boolean;
   permissions: Permission[];
   companyName: string;
   id: string;
@@ -98,6 +97,10 @@ export const useAuthStore = defineStore("auth", () => {
       return false;
     }
     const userPermissions = state.value.userDetails.permissions;
+
+    if (!Object.values(permissions.value).find((p) => p.subject === subject)) {
+      return false;
+    }
 
     const userHasPermission = userPermissions?.find((permission) => {
       return (

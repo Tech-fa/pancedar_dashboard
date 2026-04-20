@@ -360,9 +360,11 @@ import { useDialog } from '@/stores/dialog'
 import { useClientStore } from '@/stores/client'
 import { useUiStore } from '@/stores/ui'
 import { storeToRefs } from 'pinia'
-import type { ClientAccount, PaginatedResponse, Team } from '@/util/interfaces'
+import type { ClientAccount } from './admin/account/account.interface'
+import type { PaginatedResponse } from '@/util/interfaces'
+import type { Team } from './admin/teams/team.interface'
 import Select2 from '@/components/Select2.vue'
-import ComplianceNotice from './compliance/compliance-notice.vue'
+import ComplianceNotice from './compliance-notice.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -520,23 +522,7 @@ onUnmounted(() => {
     window.removeEventListener('scroll', handleUserActivity)
 })
 
-const fetchNotificationCount = async () => {
-    try {
-        const response = await apiGet<number>('/user-notifications/unviewed-count', authStore)
-        if (notificationCountStore.count !== response) {
-            notificationCountStore.setCount(response)
-            if (response > 0) {
-                toast.showToast(
-                    'New Notification',
-                    'You have ' + response + ' new notifications',
-                    'success'
-                )
-            }
-        }
-    } catch (error) {
-        console.error('Error fetching notification count:', error)
-    }
-}
+
 
 const navigations: {
     name: string
@@ -577,192 +563,16 @@ const navigations: {
             ]
         },
         {
-            name: 'Compliance',
-            path: '/qms',
-            icon: h('i', { class: 'fa-solid fa-shield-halved text-opposite ' }),
+            name: 'Resources',
+            path: '/resources',
+            icon: h('i', { class: 'fa-solid fa-book text-opposite ' }),
             menuItems: [
                 {
-                    name: 'Dashboard',
-                    path: '/qms/dashboard',
-                    icon: h('i', { class: 'fa-solid fa-chart-line text-opposite ' }),
-                    subject: 'document'
-                },
-                {
-                    name: 'Documents',
-                    path: '/qms/documents',
-                    icon: h('i', { class: 'fa-solid fa-file-pen text-opposite ' }),
-                    subject: 'document'
-                }
-            ]
-        },
-
-        // {
-        //     name: 'Inventory',
-        //     path: '/inventory',
-        //     icon: h('i', { class: 'fa-solid fa-warehouse text-opposite ' }),
-        //     menuItems: [
-        //         {
-        //             name: 'Dashboard',
-        //             path: '/inventory/dashboard',
-        //             icon: h('i', { class: 'fa-solid fa-warehouse text-opposite ' }),
-        //             subject: 'part-inventory'
-        //         },
-        //         {
-        //             name: 'Parts',
-        //             path: '/inventory/parts',
-        //             icon: h('i', { class: 'fa-solid fa-cogs text-opposite ' }),
-        //             subject: 'part'
-        //         },
-        //         {
-        //             name: 'Purchase Orders',
-        //             path: '/inventory/purchase-orders',
-        //             icon: h('i', { class: 'fa-solid fa-file-invoice text-opposite ' }),
-        //             subject: 'purchase-order'
-        //         },
-        //         {
-        //             name: 'Vendors',
-        //             path: '/inventory/vendors',
-        //             icon: h('i', { class: 'fa-solid fa-handshake text-opposite ' }),
-        //             subject: 'vendor'
-        //         },
-        //         {
-        //             name: 'Warehouses',
-        //             path: '/inventory/warehouses',
-        //             icon: h('i', { class: 'fa-solid fa-building text-opposite ' }),
-        //             subject: 'warehouse'
-        //         }
-        //     ]
-        // },
-        // {
-        //     name: 'Maintenance',
-        //     path: '/maintenance',
-        //     icon: h('i', { class: 'fa-solid fa-tools text-opposite ' }),
-        //     menuItems: [
-        //         {
-        //             name: 'Dashboard',
-        //             path: '/services/dashboard',
-        //             icon: h('i', { class: 'fa-solid fa-chart-line text-opposite ' }),
-        //             subject: 'work-order'
-        //         },
-        //         {
-        //             name: 'Service Tasks',
-        //             path: '/services/service-tasks',
-        //             icon: h('i', { class: 'fa-solid fa-wrench text-opposite ' }),
-        //             subject: 'service-task'
-        //         },
-        //         {
-        //             name: 'Service Programs',
-        //             path: '/services/service-programs',
-        //             icon: h('i', { class: 'fa-solid fa-list-check text-opposite ' }),
-        //             subject: 'service-program'
-        //         },
-        //         {
-        //             name: 'Technicians',
-        //             path: '/services/technicians',
-        //             icon: h('i', { class: 'fa-solid fa-user-group text-opposite ' }),
-        //             subject: 'technician'
-        //         },
-        //         {
-        //             name: 'Alerts',
-        //             path: '/alerts',
-        //             icon: h('i', { class: 'fa-solid fa-bell text-opposite ' }),
-        //             subject: 'alert'
-        //         },
-        //         {
-        //             name: 'Work Orders',
-        //             path: '/services/work-orders',
-        //             icon: h('i', { class: 'fa-solid fa-clipboard-check text-opposite ' }),
-        //             subject: 'work-order'
-        //         },
-        //         {
-        //             name: 'Calendar',
-        //             path: '/services/calendar',
-        //             icon: h('i', { class: 'fa-solid fa-calendar text-opposite ' }),
-        //             subject: 'work-order'
-        //         },
-
-
-        //         {
-        //             name: 'Inspections',
-        //             path: '/inspections/history',
-        //             icon: h('i', { class: 'fa-solid fa-clipboard-list text-opposite ' }),
-        //             subject: 'inspection'
-        //         }
-        //     ]
-        // },
-        {
-            name: 'Flight Ops',
-            path: '/fleet',
-            icon: h('i', { class: 'fa-solid fa-plane-arrival text-opposite ' }),
-            menuItems: [
-                {
-                    name: 'Dashboard',
-                    path: '/fleet/dashboard',
-                    icon: h('i', { class: 'fa-solid fa-chart-line text-opposite ' }),
-                    subject: 'asset'
-                },
-                {
-                    name: 'Drones',
-                    path: '/fleet/assets',
-                    icon: h('i', { class: 'fa-solid fa-plane-arrival text-opposite ' }),
-                    subject: 'asset'
-                },
-                {
-                    name: 'Map',
-                    path: '/fleet/map',
-                    icon: h('i', { class: 'fa-solid fa-map-location-dot text-opposite ' }),
-                    subject: 'asset'
-                },
-                {
-                    name: 'Jobs',
-                    path: '/fleet/planned-jobs',
-                    icon: h('i', { class: 'fa-solid fa-briefcase text-opposite ' }),
-                    subject: 'vehicle-job'
-                },
-                {
-                    name: 'Job Types',
-                    path: '/fleet/job-types',
+                    name: 'Categories',
+                    path: '/resources/categories',
                     icon: h('i', { class: 'fa-solid fa-tags text-opposite ' }),
-                    subject: 'vehicle-job-type'
-                },
-                {
-                    name: 'Pilots',
-                    path: '/fleet/pilots',
-                    icon: h('i', { class: 'fa-solid fa-user text-opposite ' }),
-                    subject: 'pilot'
+                    subject: 'email_workflow_categories'
                 }
-            ]
-        },
-
-        {
-            name: 'Customers',
-            path: '/customers',
-            icon: h('i', { class: 'fa-solid fa-building text-opposite ' }),
-            menuItems: [
-                {
-                    name: 'Dashboard',
-                    path: '/customers/dashboard',
-                    icon: h('i', { class: 'fa-solid fa-chart-line text-opposite ' }),
-                    subject: 'customer'
-                },
-                {
-                    name: 'Customer List',
-                    path: '/customers/list',
-                    icon: h('i', { class: 'fa-solid fa-list text-opposite ' }),
-                    subject: 'customer'
-                },
-                // {
-                //     name: 'Portal Configuration',
-                //     path: '/customers/portal-config',
-                //     icon: h('i', { class: 'fa-solid fa-gear text-opposite ' }),
-                //     subject: 'customer'
-                // },
-                // {
-                //     name: 'Customer Services',
-                //     path: '/customers/services',
-                //     icon: h('i', { class: 'fa-solid fa-concierge-bell text-opposite ' }),
-                //     subject: 'customer'
-                // }
             ]
         },
         {
@@ -782,39 +592,12 @@ const navigations: {
                     icon: h('i', { class: 'fa-solid fa-plug text-opposite ' }),
                     subject: 'workflows'
                 },
-                {
-                    name: 'Cron Jobs',
-                    path: '/automation/cron-jobs',
-                    icon: h('i', { class: 'fa-solid fa-clock text-opposite ' }),
-                    subject: 'workflows'
-                },
-                {
-                    name: 'Checklists',
-                    path: '/automation/checklists',
-                    icon: h('i', { class: 'fa-solid fa-clipboard-check text-opposite ' }),
-                    subject: 'assets'
-                }
+
+
             ]
         },
-        {
-            name: 'Operation Config',
-            path: '/operation-config',
-            icon: h('i', { class: 'fa-solid fa-sliders text-opposite ' }),
-            menuItems: [
-                {
-                    name: 'Locations',
-                    path: '/operation-config/locations',
-                    icon: h('i', { class: 'fa-solid fa-globe text-opposite ' }),
-                    subject: 'operation-config'
-                }
-            ]
-        },
-        // {
-        //     name: 'Reports',
-        //     path: '/reports',
-        //     icon: h('i', { class: 'fa-solid fa-chart-bar text-opposite ' }),
-        //     subject: 'reports'
-        // },
+
+
 
     ]
 </script>

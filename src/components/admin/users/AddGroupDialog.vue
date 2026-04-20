@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { PermissionGroup } from '@/util/interfaces'
+import type { PermissionGroup } from '../permissions/permission.interface'
 import AppButton from '@/components/AppButton.vue'
 
 const props = defineProps<{

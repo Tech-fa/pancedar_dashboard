@@ -13,10 +13,10 @@
             </AppButton>
         </div>
 
-        <Notice v-if="!isPilot"
+        <Notice
             description="Each team can have multiple groups. Every widget must include a team and at least one group."
             level="info" />
-        <label for="set-admin-toggle" v-if="canSetAsAdmin && !isPilot"
+        <label for="set-admin-toggle" v-if="canSetAsAdmin"
             class="flex items-center justify-start bg-main border rounded-md px-3 py-2">
             <input id="set-admin-toggle" v-model="isAdminUser" type="checkbox"
                 class="w-4 h-4 rounded border-neutral-300 text-opposite/30 focus:ring-neutral-900"
@@ -49,7 +49,7 @@
             </div>
 
             <div class="space-y-2">
-                <div class="flex items-center justify-between" v-if="!isPilot">
+                <div class="flex items-center justify-between">
                     <span class="text-xs text-opposite/70">Permission Groups</span>
                     <AppButton buttonStyle="secondary" @click="openAddGroupDialog(assignment)" type="button"
                         :disabled="!assignment.team">
@@ -60,7 +60,7 @@
                     <span v-for="groupId in assignment.groupIds" :key="`${assignment.id}-${groupId}`"
                         class="px-2 py-1 rounded-full text-xs bg-main text-opposite border border-opposite/20 flex items-center gap-2">
                         {{ getGroupName(groupId) }}
-                        <button class="text-opposite/80 hover:text-red-600" v-if="!isPilot"
+                        <button class="text-opposite/80 hover:text-red-600"
                             @click="removeGroupFromAssignment(assignment, groupId)">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
@@ -91,17 +91,19 @@ import { useToast } from '@/stores/notification'
 import { useDialog } from '@/stores/dialog'
 import AddGroupDialog from './AddGroupDialog.vue'
 import { apiGet, apiPost } from '@/util/api'
-import type { PaginatedResponse, PermissionGroup, Team, User } from '@/util/interfaces'
+import type { PermissionGroup } from '../permissions/permission.interface'
+import type { Team } from '../teams/team.interface'
+import type { User } from './user.interface'
 import { useRoute, useRouter } from 'vue-router'
 import AppButton from '@/components/AppButton.vue'
 import Notice from '@/components/Notice.vue'
 import Select2 from '@/components/Select2.vue'
+import type { PaginatedResponse } from '@/util/interfaces'
 
 const props = withDefaults(
     defineProps<{
         userId?: string
         embedded?: boolean
-        isPilot?: boolean
     }>(),
     {
         embedded: false,
@@ -152,7 +154,7 @@ const getGroupName = (groupId: number) =>
 
 const addTeamAssignment = () => {
     if (!isAdminUser.value) {
-        teamAssignments.value.push(createAssignment(undefined as any, props.isPilot ? [availableGroups.value.find((group) => group.name === 'Drone Pilot')?.id as number] : []))
+        teamAssignments.value.push(createAssignment())
     }
 }
 
@@ -182,7 +184,7 @@ const syncIsAdminToggle = () => {
         assignmentByTeam[team.id]?.groupIds.includes(adminGroupId.value as number)
     )
     if (!userId) {
-        teamAssignments.value.push(createAssignment(teams.value.find((team) => team.id === authStore.state.teamId), props.isPilot ? [availableGroups.value.find((group) => group.name === 'Drone Pilot')?.id as number] : []))
+        teamAssignments.value.push(createAssignment(teams.value.find((team) => team.id === authStore.state.teamId), []))
         return;
     }
 }

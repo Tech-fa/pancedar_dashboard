@@ -1,21 +1,15 @@
 <template>
     <div id="root" class="min-h-screen bg-dark">
-        <BreadCrums
-            :crumbs="[
-                {
-                    name: 'Teams',
-                    path: '/admin/teams',
-                    icon: 'fa-solid fa-people-group text-neutral-700 text-2xl'
-                }
-            ]"
-        >
+        <BreadCrums :crumbs="[
+            {
+                name: 'Teams',
+                path: '/admin/teams',
+                icon: 'fa-solid fa-people-group text-neutral-700 text-2xl'
+            }
+        ]">
             <div class="flex items-center gap-4">
                 <Can :subject="'teams'" :actions="['create']">
-                    <AppButton
-                        test-id="teams-add-team"
-                        buttonStyle="primary"
-                        href="/admin/teams/add"
-                    >
+                    <AppButton test-id="teams-add-team" buttonStyle="primary" href="/admin/teams/add">
                         <i class="fa-solid fa-plus"></i>
                         <span class="ml-2">Add Team</span>
                     </AppButton>
@@ -24,36 +18,21 @@
         </BreadCrums>
 
         <div test-id="teams-table-wrapper" class="p-4">
-            <Table
-                :cols="['Name', 'Members', 'Created At']"
-                :rows="rows"
-                :page="page"
-                :total="total"
-                :per-page="perPage"
-                :total-pages="totalPages"
-                :on-next-page="onNextPage"
-                :on-previous-page="onPreviousPage"
-                :set-page="setPage"
-                :entities="teams"
-                entity-name="Team"
-                :on-success="fetchTeams"
-                :on-search="
-                    (val: string) => {
+            <Table :cols="['Name', 'Members', 'Created At']" :rows="rows" :page="page" :total="total"
+                :per-page="perPage" :total-pages="totalPages" :on-next-page="onNextPage"
+                :on-previous-page="onPreviousPage" :set-page="setPage" :entities="teams" entity-name="Team"
+                :on-success="fetchTeams" :on-search="(val: string) => {
                         query = val
                     }
-                "
-                :loading="loading"
-                :subject="'teams'"
-                :search-placeholder="'Search by team name'"
-                :handleDelete="handleDelete"
-            />
+                    " :loading="loading" :subject="'teams'" :search-placeholder="'Search by team name'"
+                :handleDelete="handleDelete" />
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import Table from '@/components/Table.vue'
-import type { Team, PaginatedResponse } from '@/util/interfaces'
+import type { Team } from './team.interface'
 import { apiGet, apiDelete } from '@/util/api'
 import { useAuthStore } from '@/stores/auth'
 import AppButton from '@/components/AppButton.vue'
@@ -63,6 +42,7 @@ import { useToast } from '@/stores/notification'
 import { useDialog } from '@/stores/dialog'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { formatDateToDay } from '@/util/util'
+import type { PaginatedResponse } from '@/util/interfaces'
 
 const teams = ref<Team[]>([])
 const page = ref(1)

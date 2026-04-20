@@ -68,7 +68,9 @@ import { ref, computed, onMounted } from 'vue'
 import { apiGet, apiPost } from '@/util/api'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
-import type { PermissionGroup, TeamMemberEntry, User } from '@/util/interfaces'
+import type { PermissionGroup } from '../permissions/permission.interface'
+import type { TeamMember } from './team.interface'
+import type { User } from '../users/user.interface'
 import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
 
@@ -77,7 +79,7 @@ const props = defineProps<{
     existingMemberIds: string[]
     onSuccess: () => void
     onCancel: () => void
-    existingMember?: TeamMemberEntry
+    existingMember?: TeamMember
 }>()
 
 const authStore = useAuthStore()

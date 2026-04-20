@@ -93,7 +93,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useClientStore } from '@/stores/client'
 import { apiGet, apiPostFormData } from '@/util/api'
 import { useToast } from '@/stores/notification'
-import type { ClientAccount } from '@/util/interfaces'
+import type { ClientAccount } from './account.interface'
 
 const authStore = useAuthStore()
 const clientStore = useClientStore()

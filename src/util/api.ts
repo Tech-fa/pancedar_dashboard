@@ -120,6 +120,23 @@ export const apiPut = async <T>(
     throw error;
   }
 };
+
+export const apiPutFormData = async <T>(
+  path: string,
+  formData: FormData,
+  authStore: AuthStore,
+) => {
+  try {
+    renewToken(authStore);
+    const response = await apiCall.put<T>(path, formData, {
+      headers: { authorization: authStore.state.token },
+    });
+    return await response.data;
+  } catch (error) {
+    checkAuth(error, authStore);
+    throw error;
+  }
+};
 export const apiPatch = async <T>(
   path: string,
   body: { [key: string]: any },

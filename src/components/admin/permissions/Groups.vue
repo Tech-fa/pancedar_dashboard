@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import Table from '@/components/Table.vue'
-import type { PaginatedResponse, PermissionGroup } from '@/util/interfaces'
+import type { PermissionGroup } from './permission.interface'
 import { apiGet } from '@/util/api'
 import { useAuthStore } from '@/stores/auth'
 import AppButton from '@/components/AppButton.vue'

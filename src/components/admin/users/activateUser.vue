@@ -111,7 +111,7 @@ import AppButton from '@/components/AppButton.vue'
 import { apiPut } from '@/util/api'
 import { useToast } from '@/stores/notification'
 import { useAuthStore } from '@/stores/auth'
-import type { User } from '@/util/interfaces'
+import type { User } from './user.interface'
 const authStore = useAuthStore()
 const props = defineProps<{
     activate: boolean

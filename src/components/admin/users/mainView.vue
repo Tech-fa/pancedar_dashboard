@@ -1,21 +1,15 @@
 <template>
     <div id="root" class="min-h-screen bg-dark">
-        <BreadCrums
-            :crumbs="[
-                {
-                    name: 'User Management',
-                    path: '/admin/users',
-                    icon: 'fa-solid fa-users text-neutral-700 text-2xl'
-                }
-            ]"
-        >
+        <BreadCrums :crumbs="[
+            {
+                name: 'User Management',
+                path: '/admin/users',
+                icon: 'fa-solid fa-users text-neutral-700 text-2xl'
+            }
+        ]">
             <div class="flex items-center gap-4">
                 <Can :subject="'users'" :actions="['create']">
-                    <AppButton
-                        test-id="user-management-add-user"
-                        buttonStyle="primary"
-                        href="/admin/users/add"
-                    >
+                    <AppButton test-id="user-management-add-user" buttonStyle="primary" href="/admin/users/add">
                         <i class="fa-solid fa-plus"></i>
                         <span class="ml-2">Add User</span>
                     </AppButton>
@@ -24,42 +18,21 @@
         </BreadCrums>
 
         <div test-id="user-management-table-wrapper" class="p-4">
-            <Table
-                :cols="['Name', 'Email', 'Phone', 'User Type', 'Status']"
-                :rows="rows"
-                :page="page"
-                :total="total"
-                :per-page="perPage"
-                :total-pages="totalPages"
-                :on-next-page="onNextPage"
-                :on-previous-page="onPreviousPage"
-                :set-page="setPage"
-                :entities="users"
-                entity-name="User"
-                :on-success="onSuccess"
-                :on-search="
-                    (val: string) => {
-                        query = val
-                    }
-                "
-                :loading="loading"
-                :subject="'users'"
-                :search-placeholder="'Search by name or email'"
-                :handleDelete="handleDelete"
-            >
+            <Table :cols="['Name', 'Email', 'Phone', 'Status']" :rows="rows" :page="page" :total="total"
+                :per-page="perPage" :total-pages="totalPages" :on-next-page="onNextPage"
+                :on-previous-page="onPreviousPage" :set-page="setPage" :entities="users" entity-name="User"
+                :on-success="onSuccess" :on-search="(val: string) => {
+                    query = val
+                }
+                    " :loading="loading" :subject="'users'" :search-placeholder="'Search by name or email'"
+                :handleDelete="handleDelete">
                 <template #extra-field="{ entity }">
-                    <Can
-                        :subject="'users'"
-                        :actions="['update']"
-                        v-if="
-                            +entity.failedLogins >= 3 &&
-                            entity.id !== authStore.state?.userDetails?.id
-                        "
-                    >
-                        <span
-                            class="text-opposite hover:text-opposite/40 cursor-pointer ml-4"
-                            @click="unlockUser(entity)"
-                        >
+                    <Can :subject="'users'" :actions="['update']" v-if="
+                        +entity.failedLogins >= 3 &&
+                        entity.id !== authStore.state?.userDetails?.id
+                    ">
+                        <span class="text-opposite hover:text-opposite/40 cursor-pointer ml-4"
+                            @click="unlockUser(entity)">
                             <i class="fa-solid fa-unlock"></i>
                         </span>
                     </Can>
@@ -71,7 +44,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import Table from '@/components/Table.vue'
-import type { User } from '@/util/interfaces'
+import type { User } from './user.interface'
 import { apiGet, apiDelete, apiPut } from '@/util/api'
 import { useAuthStore } from '@/stores/auth'
 import AppButton from '@/components/AppButton.vue'
@@ -102,7 +75,6 @@ const mapRows = (users: User[]) => {
         Name: `${user.fname} ${user.lname}`,
         Email: user.email,
         Phone: user.phone,
-        'User Type': user?.isAdmin ? 'Admin' : user?.userType,
         Status: user.isActive ? 'Active' : 'Inactive'
     }))
 }

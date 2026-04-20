@@ -16,9 +16,6 @@
                         </div>
                     </div>
                 </div>
-                <Tabs v-if="isEditMode && isPilotModule"
-                    :tabs="tabLabels"
-                    v-model="tab" class="px-6 pt-4" />
 
                 <Form @submit="submitForm" :class="tab === 0 ? 'p-6 space-y-6' : 'hidden'"
                     v-if="!isEditMode || (isEditMode && initialValues.fname)">
@@ -44,14 +41,11 @@
                                 " :required="true" />
                     </div>
 
-                    <SearcheableMultiSelectForm v-if="isPilotModule" name="skillIds" label="Skills"
-                        placeholder="Search and select skills..." :values="allSkills" :display="(s: any) => s.name"
-                        v-model="selectedSkills" />
 
 
 
-                    <UserPermissions ref="permissionsRef" :userId="(userId as string)" :embedded="true"
-                        :isPilot="isPilotModule" />
+
+                    <UserPermissions ref="permissionsRef" :userId="(userId as string)" :embedded="true" />
 
                     <div class="space-y-2">
                         <label class="block text-sm text-opposite/70">Status</label>
@@ -84,16 +78,6 @@
                     </div>
                 </div>
 
-                <!-- Permissions Tab -->
-
-                <!-- Documents Tab (Pilots only) -->
-                <UserDocuments v-if="isPilotModule && isEditMode && verifiedAt > 0 && tab == 1"
-                    :userId="(userId as string)" />
-
-
-                <!-- Availability Tab (Pilots only) -->
-                <UserAvailability v-if="tab==(tabLabels.length - 1) && isPilotModule && isEditMode"
-                    :userId="(userId as string)" />
             </div>
         </main>
     </div>
@@ -108,17 +92,12 @@ import { useAuthStore } from '../../../stores/auth'
 import { apiPost, apiGet, apiPut } from '../../../util/api'
 import { useToast } from '../../../stores/notification'
 import { exists, isEmail, isPhone } from '../../../util/util'
-import type { Skill, User } from '../../../util/interfaces'
+import type { User } from './user.interface'
 import AppButton from '../../AppButton.vue'
 import Spinner from '../../Spinner.vue'
 import Select2 from '@/components/Select2.vue'
 import BreadCrums from '@/components/breadCrums.vue'
-import SearcheableMultiSelectForm from '@/components/SearcheableMultiSelectForm.vue'
 import UserPermissions from './userPermissions.vue'
-import UserDocuments from './UserDocuments.vue'
-import UserAvailability from './UserAvailability.vue'
-import { getSkills } from '@/components/operations/pilots/endpoints'
-import Tabs from '@/components/Tabs.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -133,11 +112,8 @@ const verifiedAt = ref(0)
 const isSendingActivationEmail = ref(false)
 const tab = ref(0)
 
-const selectedSkills = ref<Skill[]>([])
-const allSkills = ref<Skill[]>([])
 const permissionsRef = ref<InstanceType<typeof UserPermissions> | null>(null)
 
-const isPilotModule = ref(route.meta?.module === 'pilots')
 const crums =
     [
         {
@@ -152,10 +128,7 @@ const crums =
         }
     ]
 
-const tabLabels = computed(() => {
-    return ['Details', 'Documents', 'Availability'].filter((t) => t !== 'Documents' || (t === 'Documents' && verifiedAt.value > 0))
-})
-// Fetch user data if in edit mode
+
 onMounted(async () => {
 
     if (isEditMode) {
@@ -173,22 +146,6 @@ onMounted(async () => {
 
             isActive.value = userData.isActive
             verifiedAt.value = userData.verifiedAt
-            let isPilot = isPilotModule.value;
-            if (userData.userType === 'pilot') {
-                isPilotModule.value = true;
-                isPilot = true;
-            }
-            if (isPilot) {
-                try {
-                    const result = await getSkills(authStore)
-                    allSkills.value = result
-                } catch {
-                    allSkills.value = []
-                }
-                if (userData.skills) {
-                    selectedSkills.value = userData.skills.map((us) => us.skill).filter(Boolean)
-                }
-            }
         } catch (error: any) {
             toast.showToast(
                 'Error loading user',
@@ -215,13 +172,10 @@ const submitForm = async (values: any) => {
         ...permPayload
     }
 
-    if (isPilotModule.value) {
-        userData.userType = 'pilot'
-        userData.skillIds = selectedSkills.value.map((s) => s.id)
-    }
+
     try {
         let response: any
-        const entityName = isPilotModule.value ? 'Pilot' : 'User'
+        const entityName = 'User'
         if (isEditMode) {
             response = await apiPut(`/users/${userId}`, userData, authStore)
             toast.showToast(
@@ -237,9 +191,7 @@ const submitForm = async (values: any) => {
                 'success'
             )
         }
-        const redirectPath = isPilotModule.value
-            ? `/fleet/pilots/${response.id}`
-            : `/admin/users`
+        const redirectPath = `/admin/users/${response.id}`
         router.push(redirectPath)
     } catch (error: any) {
         isSubmitting.value = false
@@ -252,9 +204,7 @@ const submitForm = async (values: any) => {
     }
 }
 
-const cancel = () => {
-    router.push(isPilotModule.value ? '/fleet/pilots' : '/admin/users')
-}
+
 
 const sendActivationEmail = async () => {
     try {
@@ -275,5 +225,9 @@ const sendActivationEmail = async () => {
     } finally {
         isSendingActivationEmail.value = false
     }
+}
+
+const cancel = () => {
+    router.push('/admin/users')
 }
 </script>
