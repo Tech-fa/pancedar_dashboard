@@ -38,6 +38,10 @@
                         <div class="flex items-center gap-2">
                             <Can :subject="'workflows'" :actions="['read']">
                                 <div class="flex items-center gap-2">
+                                    <AppButton buttonStyle="void" class="text-purple-400 hover:text-purple-300 text-sm"
+                                        @click="viewWorkflowRuns(wf)">
+                                        <i class="fa-solid fa-clock-rotate-left"></i>
+                                    </AppButton>
                                     <AppButton buttonStyle="void" class="text-blue-400 hover:text-blue-300 text-sm"
                                         @click="viewWorkflow(wf)">
                                         <i class="fa-solid fa-eye"></i>
@@ -95,6 +99,10 @@ function goToNewWorkflow() {
 
 function viewWorkflow(wf: Workflow) {
     router.push(`/automation/workflows/${wf.id}`)
+}
+
+function viewWorkflowRuns(wf: Workflow) {
+    router.push(`/automation/workflows/${wf.id}/runs`)
 }
 
 const deleteWorkflowConfirmed = async (wf: Workflow) => {

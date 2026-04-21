@@ -56,3 +56,15 @@ export interface UpdateWorkflowStepsPayload {
     description?: string | null
     steps?: WorkflowStep[]
 }
+
+export interface WorkflowRun {
+    id: string
+    workflowId: string
+    context: Record<string, any> | null
+    createdAt: number
+    updatedAt: number
+    status: string
+    currentStep: string | null
+    stepsContext: Record<string, any> | null
+    explanation: Record<string, any> | null
+}

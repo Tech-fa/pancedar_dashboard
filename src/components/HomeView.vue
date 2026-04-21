@@ -404,11 +404,6 @@ const checkIdle = () => {
     }
 }
 
-const companyName = computed(() => {
-    return client.value?.companyName || authStore.state.userDetails?.companyName || 'Account'
-})
-
-
 
 const clientLogoUrl = computed(() => client.value?.logoUrl || null)
 
@@ -450,24 +445,19 @@ const fetchClientAccount = async () => {
     }
 }
 
-watch(authStore, () => {
-    if (!authStore.state.isLoggedIn) {
-        teamsList.value = []
-        router.push({
-            path: '/login',
-            query: query.value
-        })
-    }
-    if (!localStorage.getItem('permissions') && authStore.state.isLoggedIn) {
-        apiGetPublic<{ [key: string]: PermissionTree }>('/permissions').then((res) => {
-            authStore.setPermissionTree(res)
-        })
-    }
-    if (authStore.state.isLoggedIn) {
-        fetchClientAccount()
-        fetchTeams()
-    }
-})
+watch(
+    () => [authStore.state.isLoggedIn],
+    ([isLoggedIn]) => {
+        if (!isLoggedIn) {
+            teamsList.value = []
+            router.push({
+                path: '/login',
+                query: query.value
+            })
+            return
+        }
+    },
+)
 
 const selectTeam = (team: Team) => {
     renewToken(authStore, true, team.id).then(() => {
@@ -475,20 +465,11 @@ const selectTeam = (team: Team) => {
     })
 }
 onMounted(() => {
-    // Fetch notification count immediately
-    // fetchNotificationCount()
-
-    // Set up a timer to fetch notification count every 60 seconds
-    // notificationTimer.value = window.setInterval(() => {
-    //     fetchNotificationCount()
-    // }, 60000)
-
-    if (!localStorage.getItem('permissions')) {
-        apiGetPublic<{ [key: string]: PermissionTree }>('/permissions').then((res) => {
+    if (!localStorage.getItem('permissions') && authStore.state.isLoggedIn) {
+        apiGet<{ [key: string]: PermissionTree }>('/permissions', authStore).then((res) => {
             authStore.setPermissionTree(res)
         })
     }
-
     fetchClientAccount()
     fetchTeams()
 
@@ -503,19 +484,12 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-    // Clean up the timer when component is unmounted to prevent memory leaks
-    // if (notificationTimer.value !== null) {
-    //     window.clearInterval(notificationTimer.value)
-    //     notificationTimer.value = null
-    // }
 
-    // Clean up idle detection
     if (idleTimeout.value !== null) {
         window.clearInterval(idleTimeout.value)
         idleTimeout.value = null
     }
 
-    // Remove event listeners
     window.removeEventListener('mousemove', handleUserActivity)
     window.removeEventListener('keydown', handleUserActivity)
     window.removeEventListener('click', handleUserActivity)

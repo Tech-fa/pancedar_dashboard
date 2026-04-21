@@ -5,6 +5,7 @@ import type {
   CreateWorkflowPayload,
   UpdateWorkflowStepsPayload,
   Workflow,
+  WorkflowRun,
 } from "./workflow.interface";
 
 export interface ConnectorTypeConfig {
@@ -12,6 +13,12 @@ export interface ConnectorTypeConfig {
   description: string;
   serviceName: string;
   oauthUrl?: string;
+}
+
+export interface WorkflowRunsFilters {
+  hideCompleted?: boolean;
+  hideSkipped?: boolean;
+  onlyShowAwaitingActions?: boolean;
 }
 
 export interface Connector {
@@ -23,12 +30,28 @@ export interface Connector {
   credentials?: Record<string, any>;
   createdAt?: number;
   updatedAt?: number;
+  /** DELETE this path to disconnect (OAuth revoke / stop watch); only when configured for the type. */
+  disconnectUrl?: string;
 }
 
 export interface AddConnectionResponse {
   connectorId: string;
   connector: Connector;
   oauthUrl?: string;
+}
+
+export interface IncomingEmailReview {
+  id: string;
+  from: string;
+  subject: string | null;
+  htmlText: string;
+  workflowRunId: string | null;
+  replyEmail: {
+    replyBody: string;
+    actionUrl: string | null;
+    workflowRunId: string;
+  } | null;
+  workflowRun: WorkflowRun;
 }
 
 // Workflow endpoints
@@ -42,6 +65,14 @@ export const getAvailableWorkflows = (authStore: AuthStore) => {
 
 export const getWorkflowById = (id: string, authStore: AuthStore) => {
   return apiGet<Workflow>(`/workflows/${id}`, authStore);
+};
+
+export const getWorkflowRuns = (
+  id: string,
+  authStore: AuthStore,
+  filters: WorkflowRunsFilters = {},
+) => {
+  return apiGet<WorkflowRun[]>(`/workflows/${id}/runs`, authStore, filters);
 };
 
 export const createWorkflow = (
@@ -60,16 +91,54 @@ export const updateWorkflow = (
 };
 
 export const reconnectConnector = (id: string, authStore: AuthStore) => {
-  return apiPut<{ oauthUrl: string }>(`/connectors/reconnect/${id}`, {}, authStore);
+  return apiPut<{ oauthUrl: string }>(
+    `/connectors/reconnect/${id}`,
+    {},
+    authStore,
+  );
+};
+
+export const disconnectConnector = (
+  data: { connectorId: string; disconnectUrl: string },
+  authStore: AuthStore,
+) => {
+  return apiPost<{ id?: string }>(data.disconnectUrl, data, authStore);
 };
 
 export const deleteWorkflow = (id: string, authStore: AuthStore) => {
   return apiDelete<{ id: string }>(`/workflows/${id}`, authStore);
 };
 
+export const getIncomingEmailReview = (
+  incomingEmailId: string,
+  authStore: AuthStore,
+) => {
+  return apiGet<IncomingEmailReview>(
+    `/users/incoming-emails/${incomingEmailId}/review`,
+    authStore,
+  );
+};
+
+export const sendIncomingEmailReply = (
+  actionUrl: string,
+  replyBody: string,
+  authStore: AuthStore,
+) => {
+  const normalizedActionUrl = actionUrl.startsWith("/")
+    ? actionUrl
+    : `/${actionUrl}`;
+  return apiPost(normalizedActionUrl, { replyBody }, authStore);
+};
+
 // Connector endpoints
-export const getNeedConnectors = (authStore: AuthStore,onlyMissing: boolean = false) => {
-  return apiGet<string[]>("/workflows/need-connectors?onlyMissing=" + onlyMissing, authStore);
+export const getNeedConnectors = (
+  authStore: AuthStore,
+  onlyMissing: boolean = false,
+) => {
+  return apiGet<string[]>(
+    "/workflows/need-connectors?onlyMissing=" + onlyMissing,
+    authStore,
+  );
 };
 
 export const getConnectors = (authStore: AuthStore) => {
@@ -94,4 +163,3 @@ export const addConnection = (
     authStore,
   );
 };
-

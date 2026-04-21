@@ -44,11 +44,8 @@ export const useAuthStore = defineStore("auth", () => {
   function setLoginState(token: string, userDetails: UserDetails) {
     const expiryDate = parseJwt(token).exp;
     const teamId = parseJwt(token).teamId;
-    state.value.token = token;
-    state.value.isLoggedIn = true;
-    state.value.userDetails = userDetails;
-    state.value.expiryDate = expiryDate;
-    state.value.teamId = teamId;
+
+    state.value = { token, isLoggedIn: true, userDetails, expiryDate, teamId };
     localStorage.setItem(
       "auth",
       JSON.stringify({
@@ -76,11 +73,13 @@ export const useAuthStore = defineStore("auth", () => {
     );
   }
   function logout() {
-    state.value.token = null;
-    state.value.isLoggedIn = false;
-    state.value.userDetails = {} as UserDetails;
-    state.value.expiryDate = 0;
-    state.value.teamId = null;
+    state.value = {
+      token: null,
+      isLoggedIn: false,
+      userDetails: {} as UserDetails,
+      expiryDate: 0,
+      teamId: null,
+    };
     localStorage.removeItem("auth");
     localStorage.removeItem("client");
     localStorage.removeItem("permissions");

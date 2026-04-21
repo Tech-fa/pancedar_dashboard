@@ -2,6 +2,8 @@ import ConnectorsPage from "./ConnectorsPage.vue";
 import WorkflowsPage from "./WorkflowsPage.vue";
 import NewWorkflowPage from "./NewWorkflowPage.vue";
 import EditWorkflowPage from "./EditWorkflowPage.vue";
+import IncomingEmailReviewPage from "./IncomingEmailReviewPage.vue";
+import WorkflowRunsPage from "./WorkflowRunsPage.vue";
 
 export const automationRoutes = [
   {
@@ -28,5 +30,20 @@ export const automationRoutes = [
     name: "AutomationWorkflowEdit",
     component: EditWorkflowPage,
     meta: { subject: "workflows", actions: ["read"] },
+  },
+  {
+    path: "/automation/workflows/:id/runs",
+    name: "AutomationWorkflowRuns",
+    component: WorkflowRunsPage,
+    meta: { subject: "workflows", actions: ["read"] },
+  },
+  {
+    path: "/automation/incoming-emails/:id",
+    name: "AutomationIncomingEmailReview",
+    component: IncomingEmailReviewPage,
+    meta: {
+      subjects: ["incoming_emails", "workflows"],
+      actions: ["read"],
+    },
   },
 ];

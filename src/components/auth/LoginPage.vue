@@ -75,8 +75,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import axios from 'axios'
-import { apiPostPublic } from '@/util/api'
-import { useAuthStore } from '@/stores/auth'
+import { apiGet, apiPostPublic } from '@/util/api'
+import { useAuthStore, type PermissionTree } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/stores/notification'
 import { Form } from 'vee-validate'
@@ -107,10 +107,12 @@ const handleLogin = async (values: any) => {
             password: values.password
         })
         authStore.setLoginState(`Bearer ${response.access_token}`, response.user)
+        const permissionTree = await apiGet<{ [key: string]: PermissionTree }>('/permissions', authStore)
+        authStore.setPermissionTree(permissionTree)
         if (router.currentRoute.value.query.redirect) {
             router.push(`${router.currentRoute.value.query.redirect}`)
         } else {
-            router.push('/fleet/dashboard')
+            router.push('/automation/workflows')
         }
     } catch (error: any) {
         toast.showToast(

@@ -101,7 +101,7 @@
 
 <script setup lang="ts">
 import { apiGet } from '@/util/api'
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
 

@@ -50,18 +50,19 @@
                                         <div class="flex flex-col gap-1">
                                             <div class="text-sm text-opposite truncate">{{ c.name }}</div>
                                             <span class="ml-3  text-xs text-opposite/60 truncate">{{ c.primaryIdentifier
-                                            }}</span>
+                                                }}</span>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2 shrink-0">
-                                        <AppButton buttonStyle="void"
+
+                                        <AppButton buttonStyle="void" v-if="c.status === 'inactive'"
                                             class="text-green-600 hover:text-green-500 text-xs"
                                             @click="reconnectConfirmed(c)">
                                             <i class="fa-solid fa-refresh"></i>
                                         </AppButton>
                                         <AppButton buttonStyle="void" class="text-red-600 hover:text-red-500 text-xs"
                                             :warnBefore="`Delete connection &quot;${c.name}&quot;?`"
-                                            @click="deleteConfirmed(c)">
+                                            @click="disconnectConfirmed(c)">
                                             <i class="fa-solid fa-trash"></i>
                                         </AppButton>
                                     </div>
@@ -96,6 +97,7 @@ import {
     getConnectors,
     deleteConnector,
     addConnection,
+    disconnectConnector,
     type Connector,
     reconnectConnector,
 } from '@/components/automation/endpoints'
@@ -210,6 +212,17 @@ const onAddConnection = async (typeName: string) => {
         toast.showToast('Error', error?.response?.data?.message || 'Failed to add connection', 'error')
     } finally {
         addingType.value = null
+    }
+}
+
+const disconnectConfirmed = async (c: Connector) => {
+    if (!c.disconnectUrl) return
+    try {
+        await disconnectConnector({ connectorId: c.id, disconnectUrl: c.disconnectUrl }, authStore)
+        toast.showToast('Disconnected', 'Connection disconnected', 'success')
+        await loadAll()
+    } catch {
+        toast.showToast('Error', 'Failed to disconnect', 'error')
     }
 }
 

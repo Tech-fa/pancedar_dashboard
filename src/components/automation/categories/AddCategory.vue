@@ -1,19 +1,17 @@
 <template>
   <div id="root" class="min-h-screen bg-main">
-    <BreadCrums
-      :crumbs="[
-        {
-          name: 'Categories',
-          path: '/resources/categories',
-          icon: 'fa-solid fa-tags text-neutral-700 text-2xl'
-        },
-        {
-          name: isEditMode ? 'Edit Category' : 'Add Category',
-          path: '',
-          icon: ''
-        }
-      ]"
-    />
+    <BreadCrums :crumbs="[
+      {
+        name: 'Categories',
+        path: '/resources/categories',
+        icon: 'fa-solid fa-tags text-neutral-700 text-2xl'
+      },
+      {
+        name: isEditMode ? 'Edit Category' : 'Add Category',
+        path: '',
+        icon: ''
+      }
+    ]" />
 
     <main id="main-content" class="p-4 sm:p-6 lg:p-8">
       <div id="edit-form" class="max-w-3xl mx-auto bg-secondary rounded-lg shadow-sm">
@@ -35,105 +33,54 @@
         </div>
 
         <Form v-else @submit="submitForm" class="p-6 space-y-6">
-          <AppInputForm
-            test-id="category-name"
-            name="name"
-            label="Category Name"
-            placeholder="Enter category name"
-            :value="initialValues.name"
-            :rules="
-              (v: any) =>
-                !exists(v)
-                  ? 'Category name is required'
-                  : v.length > 255
-                    ? 'Category name must be 255 characters or less'
-                    : true
-            "
-            :required="true"
-          />
+          <AppInputForm test-id="category-name" name="name" label="Category Name" placeholder="Enter category name"
+            :value="initialValues.name" :rules="(v: any) =>
+              !exists(v)
+                ? 'Category name is required'
+                : v.length > 255
+                  ? 'Category name must be 255 characters or less'
+                  : true
+              " :required="true" />
 
-          <AppTextareaForm
-            name="description"
-            label="Description"
-            placeholder="Enter category description"
-            :value="initialValues.description"
-          />
 
-          <AppTextareaForm
-            name="resourceText"
-            label="Resource Text"
-            placeholder="Add text that helps define this category"
-            :value="initialValues.resourceText"
-          />
 
-          <AppTextareaForm
-            name="resourceLinks"
-            label="Resource Links"
-            placeholder="One URL per line"
-            :value="initialValues.resourceLinks"
-          />
+          <AppTextareaForm name="resourceText" label="Resource Text"
+            placeholder="Add text that helps define this category" :value="initialValues.resourceText" />
+
+          <div>
+            <label class="block text-sm text-opposite mb-2">Resource Links</label>
+            <div class="space-y-2">
+              <div v-for="(_, index) in linksInputs" :key="`resource-link-${index}`">
+                <div class="flex items-center gap-2">
+                  <input v-model="linksInputs[index]" type="text" placeholder="https://example.com/resource"
+                    class="w-full rounded-md border px-3 py-2 bg-main text-opposite"
+                    :class="linkErrors[index] ? 'border-red-500' : 'border-neutral-300'" />
+                  <button v-if="linksInputs.length > 1" type="button"
+                    class="px-2 py-1 text-xs rounded-md border border-neutral-300 hover:bg-main"
+                    @click="removeLinkInput(index)">
+                    Remove
+                  </button>
+                </div>
+                <p v-if="linkErrors[index]" class="text-xs text-red-500 mt-1">{{ linkErrors[index] }}</p>
+              </div>
+            </div>
+            <button type="button" class="mt-2 px-2 py-1 text-xs rounded-md border border-neutral-300 hover:bg-main"
+              @click="addLinkInput">
+              + Add Link
+            </button>
+          </div>
 
           <div>
             <label class="block text-sm text-opposite mb-2">Resource Files</label>
-            <input
-              ref="fileInput"
-              type="file"
-              multiple
-              class="w-full text-sm text-opposite file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:bg-main file:text-opposite border rounded-md p-2 bg-main"
-              @change="onFilesSelected"
-            />
-            <p class="text-xs text-neutral-500 mt-2">
-              Upload documents to use as category resources.
-            </p>
-            <ul v-if="selectedFiles.length" class="mt-3 space-y-2">
-              <li
-                v-for="(file, index) in selectedFiles"
-                :key="`${file.name}-${index}`"
-                class="flex items-center justify-between text-sm text-opposite bg-main border rounded-md px-3 py-2"
-              >
-                <span class="truncate mr-4">{{ file.name }}</span>
-                <button
-                  type="button"
-                  class="text-red-400 hover:text-red-300"
-                  @click="removeSelectedFile(index)"
-                >
-                  Remove
-                </button>
-              </li>
-            </ul>
-            <ul v-if="existingFileKeys.length" class="mt-3 space-y-2">
-              <li
-                v-for="(key, index) in existingFileKeys"
-                :key="`${key}-${index}`"
-                class="flex items-center justify-between text-sm text-opposite bg-main border rounded-md px-3 py-2"
-              >
-                <span class="truncate mr-4">{{ key }}</span>
-                <button
-                  type="button"
-                  class="text-red-400 hover:text-red-300"
-                  @click="removeExistingFile(index)"
-                >
-                  Remove
-                </button>
-              </li>
-            </ul>
+            <MultiFileUploader v-model="selectedFiles" :files="existingFileKeys" input-id="category-resource-files"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.txt" @update:removedFiles="onRemovedFilesUpdated" />
           </div>
 
           <div class="p-6 border-t flex items-center justify-end gap-4">
-            <AppButton
-              test-id="cancel-category-button"
-              buttonStyle="secondary"
-              type="button"
-              @click="cancel"
-            >
+            <AppButton test-id="cancel-category-button" buttonStyle="secondary" type="button" @click="cancel">
               Cancel
             </AppButton>
-            <AppButton
-              test-id="save-category-button"
-              buttonStyle="primary"
-              type="submit"
-              :loading="isSubmitting"
-            >
+            <AppButton test-id="save-category-button" buttonStyle="primary" type="submit" :loading="isSubmitting">
               Save Changes
             </AppButton>
           </div>
@@ -157,6 +104,7 @@ import type { WorkflowEmailCategory } from "./category.interface";
 import AppButton from "@/components/AppButton.vue";
 import Spinner from "@/components/Spinner.vue";
 import BreadCrums from "@/components/breadCrums.vue";
+import MultiFileUploader from "@/components/MultiFileUploader.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -166,20 +114,20 @@ const toast = useToast();
 const categoryId = route.params.categoryId as string | undefined;
 const isEditMode = !!categoryId;
 const loaded = ref(false);
-const fileInput = ref<HTMLInputElement | null>(null);
 const selectedFiles = ref<File[]>([]);
 const existingResourceId = ref<string | undefined>(undefined);
 const existingFileKeys = ref<string[]>([]);
+const removedExistingFiles = ref<string[]>([]);
+const linksInputs = ref<string[]>([""]);
+const linkErrors = ref<string[]>([""]);
 const initialValues = ref<{
   name: string;
   description: string;
   resourceText: string;
-  resourceLinks: string;
 }>({
   name: "",
   description: "",
   resourceText: "",
-  resourceLinks: "",
 });
 
 onMounted(async () => {
@@ -196,17 +144,20 @@ onMounted(async () => {
     initialValues.value = {
       name: response.name,
       description: response.description || "",
-      resourceText: response.resources?.[0]?.textResource || "",
-      resourceLinks: (response.resources?.[0]?.links || []).join("\n"),
+      resourceText: response.resource?.textResource || "",
     };
-    existingResourceId.value = response.resources?.[0]?.id;
-    existingFileKeys.value = [...(response.resources?.[0]?.files || [])];
+    existingResourceId.value = response.resource?.id;
+    existingFileKeys.value = [...(response.resource?.files || [])];
+    linksInputs.value = response.resource?.links?.length
+      ? [...response.resource.links]
+      : [""];
+    linkErrors.value = linksInputs.value.map(() => "");
     loaded.value = true;
   } catch (error: any) {
     toast.showToast(
       "Error loading category",
       error?.response?.data?.message ||
-        "An error occurred while loading the category",
+      "An error occurred while loading the category",
       "error",
     );
     router.push("/resources/categories");
@@ -214,25 +165,32 @@ onMounted(async () => {
 });
 
 const submitForm = async (values: any) => {
+  if (!validateLinks()) {
+    toast.showToast("Invalid links", "Please fix invalid resource link URLs.", "error");
+    return;
+  }
+
   isSubmitting.value = true;
   const formData = new FormData();
   formData.append("name", values.name);
   formData.append("description", values.description || "");
 
-  const parsedLinks = String(values.resourceLinks || "")
-    .split("\n")
+  const parsedLinks = linksInputs.value
     .map((link) => link.trim())
     .filter((link) => !!link);
 
-  const resources = [
-    {
-      ...(existingResourceId.value ? { id: existingResourceId.value } : {}),
-      textResource: values.resourceText || null,
-      links: parsedLinks,
-      files: existingFileKeys.value,
-    },
-  ];
-  formData.append("resources", JSON.stringify(resources));
+  const activeExistingFileKeys = existingFileKeys.value.filter(
+    (key) => !removedExistingFiles.value.includes(key),
+  );
+
+  const resource =
+  {
+    ...(existingResourceId.value ? { id: existingResourceId.value } : {}),
+    textResource: values.resourceText || null,
+    links: parsedLinks,
+    files: activeExistingFileKeys,
+  };
+  formData.append("resource", JSON.stringify(resource));
   selectedFiles.value.forEach((file) => {
     formData.append("files", file);
   });
@@ -268,29 +226,49 @@ const submitForm = async (values: any) => {
     toast.showToast(
       isEditMode ? "Error updating category" : "Error creating category",
       error?.response?.data?.message ||
-        `An error occurred while ${isEditMode ? "updating" : "creating"} the category`,
+      `An error occurred while ${isEditMode ? "updating" : "creating"} the category`,
       "error",
     );
   }
 };
 
-const onFilesSelected = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (!target.files?.length) {
+const isValidUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+const validateLinks = () => {
+  linkErrors.value = linksInputs.value.map((link) => {
+    const trimmed = link.trim();
+    if (!trimmed) {
+      return "";
+    }
+    return isValidUrl(trimmed) ? "" : "Please enter a valid URL (http/https).";
+  });
+  return !linkErrors.value.some((error) => !!error);
+};
+
+const addLinkInput = () => {
+  linksInputs.value.push("");
+  linkErrors.value.push("");
+};
+
+const removeLinkInput = (index: number) => {
+  if (linksInputs.value.length === 1) {
+    linksInputs.value[0] = "";
+    linkErrors.value[0] = "";
     return;
   }
-  selectedFiles.value = [...selectedFiles.value, ...Array.from(target.files)];
-  if (fileInput.value) {
-    fileInput.value.value = "";
-  }
+  linksInputs.value.splice(index, 1);
+  linkErrors.value.splice(index, 1);
 };
 
-const removeSelectedFile = (index: number) => {
-  selectedFiles.value.splice(index, 1);
-};
-
-const removeExistingFile = (index: number) => {
-  existingFileKeys.value.splice(index, 1);
+const onRemovedFilesUpdated = (removedFiles: string[]) => {
+  removedExistingFiles.value = [...removedFiles];
 };
 
 const cancel = () => {

@@ -4,10 +4,10 @@ export interface WorkflowEmailCategory {
   description: string | null;
   createdAt: number;
   updatedAt: number;
-  resources?: {
+  resource?: {
     id?: string;
     textResource?: string | null;
     links?: string[];
     files?: string[];
-  }[];
+  };
 }
