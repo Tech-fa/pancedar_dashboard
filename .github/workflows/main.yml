@@ -31,8 +31,7 @@ jobs:
         CI=false npm run build
     - name: Push to s3
       env:
-        S3_BUCKET: ${{ secrets.S3_BUCKET }}
+        S3_BUCKET: tech-fa-ui
         CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
       run:  |
         aws s3 sync build s3://${{ env.S3_BUCKET }}
-        aws cloudfront create-invalidation --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
