@@ -6,7 +6,7 @@ export interface Team {
   members: TeamMember[];
   createdAt: number;
   updatedAt: number;
-  memberCount: number;
+  memberCount?: number;
 }
 
 export interface TeamMember {
@@ -14,4 +14,5 @@ export interface TeamMember {
   team: Team;
   user: User;
   groupIds: number[];
+  createdAt: number;
 }

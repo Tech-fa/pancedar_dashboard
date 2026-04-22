@@ -1,32 +1,23 @@
 <template>
     <div id="root" class="min-h-screen bg-main">
-        <BreadCrums
-            :crumbs="[
-                {
-                    name: 'Teams',
-                    path: '/admin/teams',
-                    icon: 'fa-solid fa-people-group text-neutral-700 text-2xl'
-                },
-                { name: 'Team Details', path: '', icon: '' }
-            ]"
-        >
+        <BreadCrums :crumbs="[
+            {
+                name: 'Teams',
+                path: '/admin/teams',
+                icon: 'fa-solid fa-people-group text-neutral-700 text-2xl'
+            },
+            { name: 'Team Details', path: '', icon: '' }
+        ]">
             <div class="flex items-center gap-4">
                 <Can :subject="'teams'" :actions="['update']">
-                    <AppButton
-                        :href="`/admin/teams/${teamId}/edit`"
-                        button-style="secondary"
-                        test-id="edit-team-button"
-                    >
+                    <AppButton :href="`/admin/teams/${teamId}/edit`" button-style="secondary"
+                        test-id="edit-team-button">
                         <i class="fa-solid fa-pen-to-square"></i>
                         <span class="ml-2">Edit</span>
                     </AppButton>
                 </Can>
                 <Can :subject="'teams'" :actions="['delete']">
-                    <AppButton
-                        button-style="primary"
-                        @click="handleDeleteTeam"
-                        test-id="delete-team-button"
-                    >
+                    <AppButton button-style="primary" @click="handleDeleteTeam" test-id="delete-team-button">
                         <i class="fa-solid fa-trash"></i>
                         <span class="ml-2">Delete Team</span>
                     </AppButton>
@@ -61,11 +52,7 @@
                             <span class="text-opposite text-sm">({{ members.length }})</span>
                         </h3>
                         <Can :subject="'teams'" :actions="['update']">
-                            <AppButton
-                                buttonStyle="primary"
-                                @click="openAddMember"
-                                test-id="add-member-button"
-                            >
+                            <AppButton buttonStyle="primary" @click="openAddMember" test-id="add-member-button">
                                 <i class="fa-solid fa-plus"></i>
                                 <span class="ml-2">Add Member</span>
                             </AppButton>
@@ -82,44 +69,34 @@
                                 <tr class="border-b">
                                     <th class="py-3 px-4 text-sm text-opposite font-medium">Name</th>
                                     <th class="py-3 px-4 text-sm text-opposite font-medium">Email</th>
-                                    <th class="py-3 px-4 text-sm text-opposite font-medium">User Type</th>
                                     <th class="py-3 px-4 text-sm text-opposite font-medium">Joined At</th>
                                     <th class="py-3 px-4 text-sm text-opposite font-medium"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr
-                                    v-for="member in members"
-                                    :key="member.id"
-                                    class="border-b last:border-0 hover:bg-main"
-                                >
+                                <tr v-for="member in members" :key="member.id"
+                                    class="border-b last:border-0 hover:bg-main">
                                     <td class="py-3 px-4 text-sm text-opposite">
                                         {{ member.user.fname }} {{ member.user.lname }}
                                     </td>
                                     <td class="py-3 px-4 text-sm text-opposite">
                                         {{ member.user.email }}
                                     </td>
-                                    <td class="py-3 px-4 text-sm text-opposite">
-                                        {{member.isAdmin ? 'Admin' : member.user.userType }}
-                                    </td>
+
                                     <td class="py-3 px-4 text-sm text-opposite">
                                         {{ formatDateToDay(member.createdAt) }}
                                     </td>
                                     <td class="py-3 px-4 text-right">
-                                        <Can :subject="'teams'" :actions="['update']"
-                                        v-if="member.user.userType !== 'pilot' && !member.isAdmin" >
-                                            <span
+                                        <Can :subject="'teams'" :actions="['update']"><span
                                                 class="mr-4 text-opposite hover:text-opposite/70 cursor-pointer text-sm"
-                                                @click="openAddMember(member)"
-                                            >
+                                                @click="openAddMember(member)">
                                                 <i class="fa-solid fa-pencil"></i>
                                             </span>
                                         </Can>
                                         <Can :subject="'teams'" :actions="['update']">
                                             <span
                                                 class="text-accent-red hover:text-accent-red/70 cursor-pointer text-sm"
-                                                @click="handleRemoveMember(member)"
-                                            >
+                                                @click="handleRemoveMember(member)">
                                                 <i class="fa-solid fa-user-minus"></i>
                                                 <span class="ml-1">Remove</span>
                                             </span>
@@ -140,7 +117,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { apiGet, apiDelete } from '@/util/api'
-import type { Team, TeamMemberEntry } from '@/util/interfaces'
+import type { Team, TeamMember } from './team.interface'
 import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
 import BreadCrums from '@/components/breadCrums.vue'
@@ -161,7 +138,6 @@ const loading = ref(true)
 const team = ref<Team>({
     id: '',
     name: '',
-    clientId: '',
     createdAt: 0,
     updatedAt: 0,
     members: []
@@ -190,7 +166,7 @@ async function fetchTeam() {
     }
 }
 
-function openAddMember(member?: TeamMemberEntry) {
+function openAddMember(member?: TeamMember) {
     dialog.openDialog(AddMemberDialog, {
         teamId: teamId.value,
         existingMemberIds: existingMemberIds.value,
@@ -205,7 +181,7 @@ function openAddMember(member?: TeamMemberEntry) {
     })
 }
 
-function handleRemoveMember(member: TeamMemberEntry) {
+function handleRemoveMember(member: TeamMember) {
     dialog.openDialog(ConfirmDialog, {
         message: `Are you sure you want to remove "${member.user.fname} ${member.user.lname}" from this team?`,
         onConfirm: async () => {

@@ -28,8 +28,7 @@
                             <!-- Sidebar component, swap this element with another sidebar if you like -->
                             <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-main px-6">
                                 <div class="flex flex-col gap-2 w-full mt-2">
-                                    <img v-if="clientLogoUrl" :src="clientLogoUrl" alt="Client logo"
-                                        class="h-12 max-w-28 object-contain" />
+
                                     <Select2 v-if="canReadTeams" :model-value="teamValue" :values="teamsList"
                                         :display="displayTeam" placeholder="Team" label="Team" class="w-full"
                                         @update:model-value="selectTeam" />
@@ -120,20 +119,7 @@
 
                                     <li class="-mx-6 mt-auto">
                                         <div class="flex flex-col gap-y-2">
-                                            <!-- Notifications -->
-                                            <div @click="router.push('/notifications')" :class="[
-                                                'flex items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 hover:bg-complementary-main/50  text-opposite cursor-pointer',
-                                                route.path == '/notifications'
-                                                    ? 'bg-complementary-main text-opposite'
-                                                    : ''
-                                            ]">
-                                                <i class="fa-solid fa-bell text-lg"></i>
-                                                <span>Notifications</span>
-                                                <span v-if="notificationCountStore.count > 0"
-                                                    class="flex items-center justify-center bg-red-500 text-white text-xs rounded-full h-5 w-5 ml-auto">
-                                                    {{ notificationCountStore.count }}
-                                                </span>
-                                            </div>
+
 
                                             <!-- Profile -->
                                             <div @click="router.push('/profile')" :class="[
@@ -184,8 +170,7 @@
                                         ]" aria-hidden="true" />
                                     </button>
                                 </div>
-                                <img v-if="clientLogoUrl" :src="clientLogoUrl" alt="Client logo"
-                                    class="h-12 ml-4 mt-2 w-auto object-contain max-w-28" />
+
                             </div>
                             <Select2 v-if="canReadTeams" :model-value="teamValue" :values="teamsList"
                                 :display="displayTeam" placeholder="Team" label="Team" class="w-full"
@@ -353,14 +338,11 @@ import { Bars3Icon, XMarkIcon, ChevronRightIcon } from '@heroicons/vue/24/outlin
 import { h, onMounted, ref, watch, type Component, onUnmounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore, type PermissionTree } from '@/stores/auth'
-import { apiGet, apiGetPublic, renewToken } from '@/util/api'
+import { apiGet, renewToken } from '@/util/api'
 import { useToast } from '@/stores/notification'
-import { useNotificationCountStore } from '@/stores/notification-count'
 import { useDialog } from '@/stores/dialog'
-import { useClientStore } from '@/stores/client'
 import { useUiStore } from '@/stores/ui'
 import { storeToRefs } from 'pinia'
-import type { ClientAccount } from './admin/account/account.interface'
 import type { PaginatedResponse } from '@/util/interfaces'
 import type { Team } from './admin/teams/team.interface'
 import Select2 from '@/components/Select2.vue'
@@ -371,12 +353,9 @@ const route = useRoute()
 const authStore = useAuthStore()
 const uiStore = useUiStore()
 const { sidebarOpen, open } = storeToRefs(uiStore)
-const notificationCountStore = useNotificationCountStore()
 const toast = useToast()
 const query = ref({})
 const dialog = useDialog()
-const clientStore = useClientStore()
-const { client } = storeToRefs(clientStore)
 
 // Add idle detection state and timer
 const idleTimeout = ref<number | null>(null)
@@ -405,7 +384,6 @@ const checkIdle = () => {
 }
 
 
-const clientLogoUrl = computed(() => client.value?.logoUrl || null)
 
 const canReadTeams = computed(() =>
     authStore.hasPermissions({ subject: 'teams', actions: ['read'] }) && teamsList.value.length > 1
@@ -433,17 +411,6 @@ const fetchTeams = async () => {
     }
 }
 
-const fetchClientAccount = async () => {
-    if (!authStore.state.isLoggedIn) {
-        return
-    }
-    try {
-        const data = await apiGet<ClientAccount>('/clients/me', authStore)
-        clientStore.setClient(data)
-    } catch (error) {
-        console.error('Error fetching client account:', error)
-    }
-}
 
 watch(
     () => [authStore.state.isLoggedIn],
@@ -470,7 +437,6 @@ onMounted(() => {
             authStore.setPermissionTree(res)
         })
     }
-    fetchClientAccount()
     fetchTeams()
 
     // Add event listeners for user activity
@@ -513,7 +479,7 @@ const navigations: {
                 {
                     name: 'Manage Users',
                     path: '/admin/users',
-                    subject: 'user',
+                    subject: 'users',
                     icon: h('i', { class: 'fa-solid fa-users text-opposite ' })
                 },
                 {
@@ -528,12 +494,7 @@ const navigations: {
                     subject: 'teams',
                     icon: h('i', { class: 'fa-solid fa-sitemap text-neutral-700 ' })
                 },
-                {
-                    name: 'Account',
-                    path: '/admin/account',
-                    subject: 'client',
-                    icon: h('i', { class: 'fa-solid fa-id-card text-opposite ' })
-                }
+
             ]
         },
         {
@@ -565,6 +526,12 @@ const navigations: {
                     path: '/automation/connectors',
                     icon: h('i', { class: 'fa-solid fa-plug text-opposite ' }),
                     subject: 'workflows'
+                },
+                {
+                    name: 'Costs',
+                    path: '/automation/costs',
+                    icon: h('i', { class: 'fa-solid fa-dollar-sign text-opposite ' }),
+                    subject: 'costs'
                 },
 
 

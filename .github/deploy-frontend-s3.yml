@@ -1,0 +1,75 @@
+# Build web_dashboard (Vite) and sync to S3, then invalidate CloudFront.
+#
+# Required repository secrets:
+#   AWS_ACCESS_KEY_ID
+#   AWS_SECRET_ACCESS_KEY
+#
+# Required repository variables:
+#   AWS_REGION
+#   S3_BUCKET                  Target bucket name (no s3:// prefix)
+#   CLOUDFRONT_DISTRIBUTION_ID
+#   VITE_API_URL               Public API base URL baked into the client bundle (same as local .env)
+#
+# Optional:
+#   VITE_BASE                  Passed as VITE_BASE for vite `base` (default "/" in vite.config)
+
+name: Deploy frontend to S3
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "./**"
+      - ".github/workflows/deploy-frontend-s3.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-frontend-s3
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  S3_BUCKET: ${{ secrets.S3_BUCKET }}
+  CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web_dashboard/package-lock.json
+
+      - name: Install and build
+        working-directory: web_dashboard
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync web_dashboard/dist "s3://${{ env.S3_BUCKET }}/" --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ env.CLOUDFRONT_DISTRIBUTION_ID }}" \
+            --paths "/*"

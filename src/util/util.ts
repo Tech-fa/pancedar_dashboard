@@ -158,7 +158,6 @@ export const isInPast = (date: string): boolean => {
 };
 export const formatDate = (date: number): string => {
   return DateTime.fromMillis(+date)
-    .setZone("utc")
     .toFormat("DDD  HH:mm");
 };
 export const formatDateToTime = (date: number): string => {

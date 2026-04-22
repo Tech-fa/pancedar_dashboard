@@ -1,4 +1,5 @@
 import ConnectorsPage from "./ConnectorsPage.vue";
+import CostsPage from "./CostsPage.vue";
 import WorkflowsPage from "./WorkflowsPage.vue";
 import NewWorkflowPage from "./NewWorkflowPage.vue";
 import EditWorkflowPage from "./EditWorkflowPage.vue";
@@ -11,6 +12,12 @@ export const automationRoutes = [
     name: "AutomationConnectors",
     component: ConnectorsPage,
     meta: { subject: "workflows", actions: ["read"] },
+  },
+  {
+    path: "/automation/costs",
+    name: "AutomationCosts",
+    component: CostsPage,
+    meta: { subject: "costs", actions: ["read"] },
   },
 
   {

@@ -19,6 +19,8 @@ export interface WorkflowRunsFilters {
   hideCompleted?: boolean;
   hideSkipped?: boolean;
   onlyShowAwaitingActions?: boolean;
+  page?: number;
+  perPage?: number;
 }
 
 export interface Connector {
@@ -72,7 +74,11 @@ export const getWorkflowRuns = (
   authStore: AuthStore,
   filters: WorkflowRunsFilters = {},
 ) => {
-  return apiGet<WorkflowRun[]>(`/workflows/${id}/runs`, authStore, filters);
+  return apiGet<PaginatedResponse<WorkflowRun>>(
+    `/workflows/${id}/runs`,
+    authStore,
+    filters,
+  );
 };
 
 export const createWorkflow = (
@@ -162,4 +168,28 @@ export const addConnection = (
     data,
     authStore,
   );
+};
+
+export interface CostByModelAggregate {
+  llmModelName: string;
+  totalCostUsd: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalCacheHitTokens: number;
+  callCount: number;
+}
+
+export interface CostPeriodAggregate {
+  year: string;
+  month: string;
+  models: CostByModelAggregate[];
+}
+
+export interface TeamCostsAggregatedResponse {
+  teamId: string;
+  periods: CostPeriodAggregate[];
+}
+
+export const getTeamCostsAggregated = (authStore: AuthStore) => {
+  return apiGet<TeamCostsAggregatedResponse>("/costs/aggregated", authStore);
 };

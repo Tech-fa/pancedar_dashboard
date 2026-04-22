@@ -3,7 +3,7 @@
         v-if="!props.href"
         v-bind="$attrs"
         :class="classes"
-        :disabled="props.loading"
+        :disabled="props.loading || ($attrs.disabled as boolean)"
         @click="handleClick"
     >
         <Spinner v-if="props.loading" />
