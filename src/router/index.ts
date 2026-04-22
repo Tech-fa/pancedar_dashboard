@@ -6,8 +6,6 @@ import { usersRoutes } from "@/components/admin/users/routes";
 import { ref } from "vue";
 import { permissionsRoutes } from "@/components/admin/permissions/routes";
 import ProfileView from "@/components/profile/Profile.vue";
-import NotificationsView from "@/components/UserNotification.vue";
-import { accountRoutes } from "@/components/admin/account/routes";
 import { teamsRoutes } from "@/components/admin/teams/routes";
 import { automationRoutes } from "@/components/automation/routes";
 import { categoriesRoutes } from "@/components/automation/categories/routes";
@@ -29,15 +27,9 @@ const router = createRouter({
         },
 
         { path: "profile", name: "Profile", component: ProfileView },
-        {
-          path: "notifications",
-          name: "Notifications",
-          component: NotificationsView,
-        },
 
         ...usersRoutes,
         ...permissionsRoutes,
-        ...accountRoutes,
         ...teamsRoutes,
         ...automationRoutes,
         ...categoriesRoutes,
