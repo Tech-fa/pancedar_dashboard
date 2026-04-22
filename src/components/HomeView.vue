@@ -386,7 +386,7 @@ const checkIdle = () => {
 
 
 const canReadTeams = computed(() =>
-    authStore.hasPermissions({ subject: 'teams', actions: ['read'] }) && teamsList.value.length > 1
+    authStore.hasPermissions({ subject: 'teams', actions: ['read'] })
 )
 
 const teamsList = ref<Team[]>([])
