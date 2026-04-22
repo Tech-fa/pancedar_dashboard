@@ -28,10 +28,11 @@ jobs:
     - name: Build react app
       run: |
         npm install
-        CI=false npm run build
+        CI=false VITE_API_URL=https://pancedar-api.tech-fa.ca npm run build
     - name: Push to s3
       env:
-        S3_BUCKET: tech-fa-ui
+        S3_BUCKET: ${{ secrets.S3_BUCKET }}
         CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
       run:  |
-        aws s3 sync build s3://${{ env.S3_BUCKET }}
+        aws s3 sync dist s3://${{ env.S3_BUCKET }}
+        aws cloudfront create-invalidation --distribution-id ${{ env.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
