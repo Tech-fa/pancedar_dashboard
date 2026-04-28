@@ -24,36 +24,49 @@
 
                 <div v-else class="space-y-3">
                     <div v-for="wf in workflows" :key="wf.id"
-                        class="bg-main rounded-lg border border-gray-800 p-4 flex items-center justify-between">
-                        <div>
-                            <div class="text-opposite font-medium">{{ wf.name }}</div>
-                            <div v-if="wf.description" class="text-sm text-opposite/60 mt-1">
+                        class="bg-main rounded-md border border-gray-700/80 p-5 flex items-start justify-between gap-4 transition-all duration-200 hover:border-gray-500 hover:shadow-md hover:shadow-black/20">
+                        <div class="min-w-0">
+                            <div class="text-opposite font-semibold text-base truncate">{{ capitalizeFirstLetter(wf.name) }}</div>
+                            <div class="text-opposite/50 font-semibold text-xs truncate">{{ wf.workflowType }}</div>
+                            <div v-if="wf.description" class="text-sm text-opposite/80 mt-1">
                                 {{ wf.description }}
                             </div>
-                            <div class="flex gap-4 mt-1 text-xs text-opposite/40">
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-opposite/45">
                                 <span v-if="wf.createdAt">Created: {{ formatDate(wf.createdAt) }}</span>
                                 <span v-if="wf.updatedAt">Updated: {{ formatDate(wf.updatedAt) }}</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2 flex-wrap justify-end shrink-0">
                             <Can :subject="'workflows'" :actions="['read']">
                                 <div class="flex items-center gap-2">
-                                    <AppButton buttonStyle="void" class="text-purple-400 hover:text-purple-300 text-sm"
+                                    <AppButton buttonStyle="void"
+                                        class="text-purple-300 hover:text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                         @click="viewWorkflowRuns(wf)">
                                         <i class="fa-solid fa-clock-rotate-left"></i>
+                                        <span>History</span>
                                     </AppButton>
-                                    <AppButton buttonStyle="void" class="text-blue-400 hover:text-blue-300 text-sm"
+                                    <AppButton buttonStyle="void"
+                                        class="text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                        @click="viewWorkflowRunsKanban(wf)">
+                                        <i class="fa-solid fa-table-columns"></i>
+                                        <span>Kanban</span>
+                                    </AppButton>
+                                    <AppButton buttonStyle="void"
+                                        class="text-blue-300 hover:text-blue-200 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                         @click="viewWorkflow(wf)">
                                         <i class="fa-solid fa-eye"></i>
+                                        <span>View</span>
                                     </AppButton>
                                 </div>
                             </Can>
                             <Can :subject="'workflows'" :actions="['delete']">
                                 <div class="flex items-center gap-2">
-                                    <AppButton buttonStyle="void" class="text-red-400 hover:text-red-300 text-sm"
+                                    <AppButton buttonStyle="void"
+                                        class="text-red-300 hover:text-red-200 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                         :warnBefore="`Are you sure you want to delete workflow &quot;${wf.name}&quot;?`"
                                         @click="deleteWorkflowConfirmed(wf)">
                                         <i class="fa-solid fa-trash"></i>
+                                        <span>Delete</span>
                                     </AppButton>
                                 </div>
                             </Can>
@@ -73,7 +86,7 @@ import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
-import { formatDate } from '@/util/util'
+import { capitalizeFirstLetter, formatDate } from '@/util/util'
 import {
     getWorkflows,
     deleteWorkflow,
@@ -103,6 +116,10 @@ function viewWorkflow(wf: Workflow) {
 
 function viewWorkflowRuns(wf: Workflow) {
     router.push(`/automation/workflows/${wf.id}/runs`)
+}
+
+function viewWorkflowRunsKanban(wf: Workflow) {
+    router.push(`/automation/workflows/${wf.id}/runs/kanban`)
 }
 
 const deleteWorkflowConfirmed = async (wf: Workflow) => {

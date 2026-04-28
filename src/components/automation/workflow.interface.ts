@@ -1,15 +1,25 @@
 export interface Workflow {
     id: string
     name: string
+    workflowType: string
     description: string | null
     triggerQueue: string
     connectorsNeeded: string[] | null
+    linkedConnectors?: WorkflowConnectorSummary[]
     steps?: WorkflowStep[] | null
     context?: Record<string, any> | null
     clientId: string
     teamId: string
     createdAt: number
     updatedAt: number
+}
+
+export interface WorkflowConnectorSummary {
+    id: string
+    name: string
+    connectorTypeId: string
+    status?: string
+    primaryIdentifier?: string
 }
 
 export interface WorkflowStep {
@@ -43,18 +53,20 @@ export interface WorkflowStepConfig {
 export interface AvailableWorkflow {
     name: string
     description: string
+    connectorsNeeded?: string[]
     steps: WorkflowStepConfig[]
 }
 
 export interface CreateWorkflowPayload {
     name: string
-    description?: string
+    workflowType: string
     steps?: WorkflowStep[]
 }
 
 export interface UpdateWorkflowStepsPayload {
     description?: string | null
     steps?: WorkflowStep[]
+    linkedConnectorIds?: string[]
 }
 
 export interface WorkflowRun {
@@ -67,4 +79,5 @@ export interface WorkflowRun {
     currentStep: string | null
     stepsContext: Record<string, any> | null
     explanation: Record<string, any> | null
+    workflow: Workflow
 }

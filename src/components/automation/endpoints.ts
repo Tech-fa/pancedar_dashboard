@@ -8,11 +8,20 @@ import type {
   WorkflowRun,
 } from "./workflow.interface";
 
+export interface ConnectorTypeField {
+  name: string;
+  type: string;
+  options?: { value: string; label: string }[] | string[];
+  required?: boolean;
+}
+
 export interface ConnectorTypeConfig {
   name: string;
   description: string;
   serviceName: string;
   oauthUrl?: string;
+  multiLink: boolean;
+  fields?: ConnectorTypeField[];
 }
 
 export interface WorkflowRunsFilters {
@@ -30,6 +39,11 @@ export interface Connector {
   status: "active" | "inactive" | "pending" | "error" | "warning";
   primaryIdentifier?: string;
   credentials?: Record<string, any>;
+  linkedWorkflows?: {
+    id: string;
+    name: string;
+    workflowType: string;
+  }[];
   createdAt?: number;
   updatedAt?: number;
   /** DELETE this path to disconnect (OAuth revoke / stop watch); only when configured for the type. */
@@ -81,6 +95,19 @@ export const getWorkflowRuns = (
   );
 };
 
+export const getWorkflowRunsByStatus = (
+  id: string | null,
+  authStore: AuthStore,
+  status: "awaiting_action" | "in_progress" | "completed",
+  pagination: { page?: number; perPage?: number },
+) => {
+  return apiGet<PaginatedResponse<WorkflowRun>>(
+    id ? `/workflows/${id}/runs/${status}` : `/workflows/runs/${status}`,
+    authStore,
+    pagination,
+  );
+};
+
 export const createWorkflow = (
   data: CreateWorkflowPayload,
   authStore: AuthStore,
@@ -97,7 +124,7 @@ export const updateWorkflow = (
 };
 
 export const reconnectConnector = (id: string, authStore: AuthStore) => {
-  return apiPut<{ oauthUrl: string }>(
+  return apiPut<{ oauthUrl?: string }>(
     `/connectors/reconnect/${id}`,
     {},
     authStore,
@@ -160,7 +187,11 @@ export const deleteConnector = (id: string, authStore: AuthStore) => {
 };
 
 export const addConnection = (
-  data: { connectorTypeName: string; name?: string },
+  data: {
+    connectorTypeName: string;
+    name?: string;
+    credentials?: Record<string, unknown>;
+  },
   authStore: AuthStore,
 ) => {
   return apiPost<AddConnectionResponse>(
@@ -168,6 +199,18 @@ export const addConnection = (
     data,
     authStore,
   );
+};
+
+export const updateConnector = (
+  id: string,
+  data: {
+    credentials?: Record<string, unknown>;
+    name?: string;
+    status?: string;
+  },
+  authStore: AuthStore,
+) => {
+  return apiPut<Connector>(`/connectors/${id}`, data, authStore);
 };
 
 export interface CostByModelAggregate {

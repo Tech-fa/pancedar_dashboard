@@ -5,6 +5,7 @@ import NewWorkflowPage from "./NewWorkflowPage.vue";
 import EditWorkflowPage from "./EditWorkflowPage.vue";
 import IncomingEmailReviewPage from "./IncomingEmailReviewPage.vue";
 import WorkflowRunsPage from "./WorkflowRunsPage.vue";
+import WorkflowRunsKanbanPage from "./WorkflowRunsKanbanPage.vue";
 
 export const automationRoutes = [
   {
@@ -33,6 +34,12 @@ export const automationRoutes = [
     meta: { subject: "workflows", actions: ["create"] },
   },
   {
+    path: "/automation/workflows/kanban",
+    name: "AutomationWorkflowRunsKanban",
+    component: WorkflowRunsKanbanPage,
+    meta: { subject: "workflows", actions: ["read"] },
+  },
+  {
     path: "/automation/workflows/:id",
     name: "AutomationWorkflowEdit",
     component: EditWorkflowPage,
@@ -44,6 +51,13 @@ export const automationRoutes = [
     component: WorkflowRunsPage,
     meta: { subject: "workflows", actions: ["read"] },
   },
+  {
+    path: "/automation/workflows/:id/runs/kanban",
+    name: "AutomationWorkflowRunsKanban",
+    component: WorkflowRunsKanbanPage,
+    meta: { subject: "workflows", actions: ["read"] },
+  },
+
   {
     path: "/automation/incoming-emails/:id",
     name: "AutomationIncomingEmailReview",

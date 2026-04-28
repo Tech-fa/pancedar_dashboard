@@ -24,9 +24,8 @@
                     </div>
 
                     <div>
-                        <label class="block text-xs text-opposite/60 mb-1 ml-1">Description</label>
-                        <AppInput v-model="description" type="text" :hideIcon="true"
-                            placeholder="Optional description for this workflow" />
+                        <label class="block text-xs text-opposite/60 mb-1 ml-1">Name</label>
+                        <AppInput v-model="name" type="text" :hideIcon="true" placeholder="Name for this workflow" />
                     </div>
 
                     <div v-if="selectedType && selectedType.steps?.length" class="pt-2 space-y-4">
@@ -34,21 +33,17 @@
                         <div v-for="(step, index) in selectedType.steps" :key="step.name"
                             class="bg-main rounded-lg border border-gray-800 p-4 space-y-3">
                             <div class="flex items-baseline gap-2">
-                                <span
-                                    class="text-xs text-opposite/50 font-mono">{{ index + 1 }}.</span>
+                                <span class="text-xs text-opposite/50 font-mono">{{ index + 1 }}.</span>
                                 <div>
                                     <div class="text-sm font-medium text-opposite">{{ step.name }}</div>
-                                    <div v-if="step.description"
-                                        class="text-xs text-opposite/60 mt-0.5">
+                                    <div v-if="step.description" class="text-xs text-opposite/60 mt-0.5">
                                         {{ step.description }}
                                     </div>
                                 </div>
                             </div>
 
                             <div v-if="step.fields?.length" class="space-y-3 pl-4 border-l border-gray-800">
-                                <WorkflowFieldInput v-for="field in step.fields"
-                                    :key="fieldKey(field)"
-                                    :field="field"
+                                <WorkflowFieldInput v-for="field in step.fields" :key="fieldKey(field)" :field="field"
                                     :modelValue="stepValues[step.name]?.[fieldKey(field)]"
                                     @update:modelValue="(v: any) => setFieldValue(step.name, field, v)" />
                             </div>
@@ -105,7 +100,7 @@ const toast = useToast()
 
 const availableTypes = ref<AvailableWorkflow[]>([])
 const selectedType = ref<AvailableWorkflow | null>(null)
-const description = ref('')
+const name = ref('')
 const loadingTypes = ref(false)
 const isSaving = ref(false)
 
@@ -183,6 +178,7 @@ const buildSteps = (): WorkflowStep[] | undefined => {
 
 const validateRequired = (): string | null => {
     if (!selectedType.value) return 'Please select a workflow type'
+    if (!name.value.trim()) return 'Name is required'
     for (const step of selectedType.value.steps || []) {
         for (const field of step.fields || []) {
             if (!field.required) continue
@@ -210,8 +206,8 @@ const save = async () => {
     isSaving.value = true
     try {
         await createWorkflow({
-            name: selectedType.value!.name,
-            description: description.value.trim() || undefined,
+            workflowType: selectedType.value!.name,
+            name: name.value.trim(),
             steps: buildSteps(),
         }, authStore)
         toast.showToast('Created', 'Workflow created successfully', 'success')

@@ -50,12 +50,13 @@
                                         <div class="flex flex-col gap-1">
                                             <div class="text-sm text-opposite truncate">{{ c.name }}</div>
                                             <span class="ml-3  text-xs text-opposite/60 truncate">{{ c.primaryIdentifier
-                                                }}</span>
+                                            }}</span>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2 shrink-0">
 
-                                        <AppButton buttonStyle="void" v-if="c.status === 'inactive'"
+                                        <AppButton buttonStyle="void"
+                                            v-if="c.status === 'inactive' && fieldsForConnectorType(typeName).length === 0"
                                             class="text-green-600 hover:text-green-500 text-xs"
                                             @click="reconnectConfirmed(c)">
                                             <i class="fa-solid fa-refresh"></i>
@@ -66,6 +67,33 @@
                                             <i class="fa-solid fa-trash"></i>
                                         </AppButton>
                                     </div>
+                                </div>
+                            </div>
+
+                            <div v-if="credentialEditor && fieldsForConnectorType(typeName).length"
+                                class="rounded-md border border-gray-700 bg-secondary/50 p-4 mb-3 space-y-3">
+                                <div class="text-xs font-medium text-opposite/80">
+                                    Connection details
+                                </div>
+                                <div class="space-y-3">
+                                    <div v-for="field in fieldsForConnectorType(typeName)" :key="field.name">
+                                        <WorkflowFieldInput :field="toWorkflowFieldConfig(field)"
+                                            v-model="credentialValues[field.name]" />
+                                        <p v-if="credentialFieldErrors[field.name]"
+                                            class="text-xs text-red-400 mt-1 ml-1">
+                                            {{ credentialFieldErrors[field.name] }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2 pt-1">
+                                    <AppButton buttonStyle="primary" type="button" :loading="!!savingCredentialsId"
+                                        @click="saveCredentialEditor(typeName)">
+                                        Save
+                                    </AppButton>
+                                    <AppButton buttonStyle="void" type="button" class="text-opposite/70"
+                                        @click="closeCredentialEditor">
+                                        Cancel
+                                    </AppButton>
                                 </div>
                             </div>
 
@@ -85,26 +113,30 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import BreadCrums from '@/components/breadCrums.vue'
 import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
+import WorkflowFieldInput from '@/components/automation/WorkflowFieldInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
+import type { WorkflowFieldConfig, WorkflowFieldType } from '@/components/automation/workflow.interface'
 import {
     getNeedConnectors,
     getConnectors,
+    getConnectorTypes,
     deleteConnector,
     addConnection,
     disconnectConnector,
+    updateConnector,
     type Connector,
+    type ConnectorTypeConfig,
+    type ConnectorTypeField,
     reconnectConnector,
 } from '@/components/automation/endpoints'
 
 const authStore = useAuthStore()
 const toast = useToast()
-const router = useRouter()
 
 const crumbs = [
     { name: 'Automation', path: '/automation/workflows', icon: 'fa-solid fa-robot text-neutral-700 text-2xl' },
@@ -114,8 +146,127 @@ const crumbs = [
 const loading = ref(false)
 const neededConnectors = ref<string[]>([])
 const connectors = ref<Connector[]>([])
+const connectorTypes = ref<ConnectorTypeConfig[]>([])
 const addingType = ref<string | null>(null)
+const credentialEditor = ref(false)
+const credentialValues = reactive<Record<string, unknown>>({})
+const credentialFieldErrors = reactive<Record<string, string>>({})
+const savingCredentialsId = ref<string | null>(null)
 let oauthPopup: Window | null = null
+
+const WF_FIELD_TYPES: WorkflowFieldType[] = ['boolean', 'text', 'number', 'select', 'files']
+
+const typeConfigByName = (typeName: string) =>
+    connectorTypes.value.find(t => t.name === typeName)
+
+const fieldsForConnectorType = (typeName: string): ConnectorTypeField[] =>
+    typeConfigByName(typeName)?.fields ?? []
+
+const toWorkflowFieldConfig = (field: ConnectorTypeField): WorkflowFieldConfig => {
+    const type = (WF_FIELD_TYPES.includes(field.type as WorkflowFieldType)
+        ? field.type
+        : 'text') as WorkflowFieldType
+    let options: string[] | undefined
+    if (field.options?.length) {
+        options = field.options.map(o =>
+            typeof o === 'string' ? o : o.value ?? o.label,
+        )
+    }
+    return {
+        label: field.name,
+        name: field.name,
+        type,
+        required: field.required,
+        options,
+    }
+}
+
+const isCredentialValueEmpty = (value: unknown, fieldType: string): boolean => {
+    if (value === null || value === undefined) return true
+    if (fieldType === 'boolean') return false
+    if (fieldType === 'number') {
+        if (value === '') return true
+        const n = typeof value === 'number' ? value : Number(value)
+        return Number.isNaN(n)
+    }
+    if (fieldType === 'files') {
+        return !Array.isArray(value) || value.length === 0
+    }
+    return String(value).trim() === ''
+}
+
+
+
+const clearCredentialErrors = () => {
+    Object.keys(credentialFieldErrors).forEach(k => delete credentialFieldErrors[k])
+}
+
+const initCredentialValues = (typeName: string) => {
+    const fields = fieldsForConnectorType(typeName)
+    const cred: Record<string, unknown> = {}
+    for (const f of fields) {
+        if (cred[f.name] === undefined) {
+            if (f.type === 'boolean') cred[f.name] = false
+            else if (f.type === 'number') cred[f.name] = null
+            else cred[f.name] = ''
+        }
+    }
+    Object.keys(credentialValues).forEach(k => delete credentialValues[k])
+    Object.assign(credentialValues, cred)
+}
+
+const openCredentialEditor = (connectorTypeName: string) => {
+    credentialEditor.value = true
+    clearCredentialErrors()
+    initCredentialValues(connectorTypeName)
+}
+
+const closeCredentialEditor = () => {
+    credentialEditor.value = false
+    clearCredentialErrors()
+    Object.keys(credentialValues).forEach(k => delete credentialValues[k])
+}
+
+const validateCredentialEditor = (typeName: string): boolean => {
+    clearCredentialErrors()
+    const fields = fieldsForConnectorType(typeName)
+    let ok = true
+    for (const f of fields) {
+        if (!f.required) continue
+        const val = credentialValues[f.name]
+        if (isCredentialValueEmpty(val, f.type)) {
+            credentialFieldErrors[f.name] = 'This field is required'
+            ok = false
+        }
+    }
+    return ok
+}
+
+const saveCredentialEditor = async (typeName: string) => {
+    if (!validateCredentialEditor(typeName)) {
+        toast.showToast('Validation', 'Please fix the highlighted fields', 'error')
+        return
+    }
+    savingCredentialsId.value = '1';
+    try {
+        await addConnection(
+            { connectorTypeName: typeName, credentials: { ...credentialValues } },
+
+            authStore,
+        )
+        toast.showToast('Saved', 'Connection details saved', 'success')
+        closeCredentialEditor()
+        await loadAll()
+    } catch (error: any) {
+        toast.showToast(
+            'Error',
+            error?.response?.data?.message || 'Failed to save connection details',
+            'error',
+        )
+    } finally {
+        savingCredentialsId.value = null
+    }
+}
 
 // Only one active status-polling timer at any time. Restarting cancels the prior one.
 const WATCH_INTERVAL_MS = 5_000
@@ -129,15 +280,18 @@ const connectorsForType = (typeName: string) =>
 
 const loadAll = async () => {
     try {
-        const [needed, existing] = await Promise.all([
+        const [needed, existing, types] = await Promise.all([
             getNeedConnectors(authStore),
             getConnectors(authStore),
+            getConnectorTypes(authStore),
         ])
         neededConnectors.value = needed || []
         connectors.value = existing || []
+        connectorTypes.value = types || []
     } catch {
         neededConnectors.value = []
         connectors.value = []
+        connectorTypes.value = []
     }
 }
 
@@ -188,6 +342,10 @@ const handleMessage = (event: MessageEvent) => {
 }
 
 const onAddConnection = async (typeName: string) => {
+    if (connectorTypes.value.find(t => t.name === typeName)?.fields?.length) {
+        openCredentialEditor(typeName);
+        return;
+    }
     addingType.value = typeName
     try {
         const resp = await addConnection({ connectorTypeName: typeName }, authStore)
@@ -200,14 +358,13 @@ const onAddConnection = async (typeName: string) => {
             if (!oauthPopup) {
                 toast.showToast('Error', 'Popup blocked — please allow popups for this site', 'error')
             }
-        } else {
-            toast.showToast('Created', 'Connection created', 'success')
         }
         await loadAll()
         const newConnectorId = resp?.connectorId || resp?.connector?.id
-        if (newConnectorId) {
+        if (newConnectorId && resp?.oauthUrl) {
             startWatchingConnector(newConnectorId)
         }
+
     } catch (error: any) {
         toast.showToast('Error', error?.response?.data?.message || 'Failed to add connection', 'error')
     } finally {
@@ -216,7 +373,10 @@ const onAddConnection = async (typeName: string) => {
 }
 
 const disconnectConfirmed = async (c: Connector) => {
-    if (!c.disconnectUrl) return
+    if (!c.disconnectUrl) {
+        deleteConfirmed(c);
+        return;
+    }
     try {
         await disconnectConnector({ connectorId: c.id, disconnectUrl: c.disconnectUrl }, authStore)
         toast.showToast('Disconnected', 'Connection disconnected', 'success')
@@ -242,7 +402,9 @@ const reconnectConfirmed = async (c: Connector) => {
             toast.showToast('Created', 'Connection created', 'success')
         }
         await loadAll()
-        startWatchingConnector(c.id)
+        if (resp?.oauthUrl) {
+            startWatchingConnector(c.id)
+        }
     } catch {
         toast.showToast('Error', 'Failed to reconnect connection', 'error')
     }
