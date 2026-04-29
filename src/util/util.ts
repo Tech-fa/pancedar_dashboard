@@ -180,6 +180,69 @@ export const formatDateToInputWithTime = (date: number): string => {
     .toFormat("yyyy-MM-dd'T'HH:mm");
 };
 
+const toTimestampMillis = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    if (value > 1e12) {
+      return value;
+    }
+    if (value > 1e9) {
+      return value * 1000;
+    }
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+  if (!trimmedValue) {
+    return null;
+  }
+
+  if (/^\d+$/.test(trimmedValue)) {
+    const numeric = Number(trimmedValue);
+    if (!Number.isFinite(numeric)) {
+      return null;
+    }
+    if (numeric > 1e12) {
+      return numeric;
+    }
+    if (numeric > 1e9) {
+      return numeric * 1000;
+    }
+    return null;
+  }
+
+  const isoCandidate = DateTime.fromISO(trimmedValue);
+  if (isoCandidate.isValid) {
+    return isoCandidate.toMillis();
+  }
+
+  return null;
+};
+
+export const formatIfTimestamp = (value: unknown): string => {
+  const timestamp = toTimestampMillis(value);
+  if (timestamp !== null) {
+    return formatDateToTime(timestamp);
+  }
+
+  if (value == null) {
+    return "";
+  }
+
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  return String(value);
+};
+
 export const formatDurationFromTimestamps = (
   start?: number | null,
   end?: number | null,

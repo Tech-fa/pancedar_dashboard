@@ -91,11 +91,52 @@
                                     :modelValue="stepValues[step.name]?.[fieldKey(field)]"
                                     @update:modelValue="(v: any) => setFieldValue(step.name, field, v)" />
                             </div>
-                            <div v-if="step.availableActions?.length" class="space-y-1 pl-4 border-l border-gray-800">
-                                <div class="text-xs text-opposite/60">Action <span class="text-red-400">*</span></div>
-                                <MultiSelect :modelValue="stepActions[step.name]" :values="step.availableActions"
-                                    :display="(action: string) => action" placeholder="Select an action"
-                                    @update:modelValue="(value: string[]) => addAction(step.name, value)" />
+                            <div v-if="step.availableActions?.length" class="space-y-3 pl-4 border-l border-gray-800">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <div class="text-xs text-opposite/60">Available actions <span
+                                                class="text-red-400">*</span></div>
+                                        <p class="text-xs text-opposite/40 mt-0.5">
+                                            Add each action once, then choose the information it should collect.
+                                        </p>
+                                        <p v-if="step.availableActions?.length && !selectableActionNamesForStep(step).length"
+                                            class="text-xs text-amber-500/90 mt-1">
+                                            Link the connectors above to enable actions for this step.
+                                        </p>
+                                    </div>
+                                    <button type="button" class="text-xs text-primary hover:underline"
+                                        :disabled="!canAddAction(step)" :class="{ 'opacity-40 cursor-not-allowed': !canAddAction(step) }"
+                                        @click="addActionEntry(step.name)">
+                                        Add action
+                                    </button>
+                                </div>
+
+                                <div v-for="(entry, actionIndex) in stepActions[step.name]"
+                                    :key="`${step.name}-${actionIndex}-${entry.action || 'new'}`"
+                                    class="bg-secondary rounded-lg border border-gray-800 p-3 space-y-3">
+                                    <div class="flex items-start gap-3">
+                                        <div class="flex-1">
+                                            <Select2 :modelValue="entry.action"
+                                                :values="availableActionsForEntry(step, actionIndex)"
+                                                :display="(action: string) => action" placeholder="Select an action"
+                                                @update:modelValue="(action: string | null) => setActionEntry(step, actionIndex, action)" />
+                                        </div>
+                                        <button v-if="stepActions[step.name]?.length > 1" type="button"
+                                            class="text-xs text-red-400 hover:underline pt-3"
+                                            @click="removeActionEntry(step.name, actionIndex)">
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <div v-if="entry.action" class="space-y-1">
+                                        <div class="text-xs text-opposite/60">Required information <span
+                                                class="text-red-400">*</span></div>
+                                        <MultiSelect :modelValue="entry.requiredInformation"
+                                            :values="requiredInformationForAction(step, entry.action)"
+                                            :display="(info: string) => info" placeholder="Select required information"
+                                            @update:modelValue="(value: string[]) => setActionRequiredInformation(step.name, actionIndex, value)" />
+                                    </div>
+                                </div>
                             </div>
                             <div v-if="!step.fields?.length && !step.availableActions?.length"
                                 class="text-xs text-opposite/40 pl-4">
@@ -144,8 +185,11 @@ import {
 import type {
     AvailableWorkflow,
     Workflow,
+    WorkflowActionConfig,
+    WorkflowAllowedActions,
     WorkflowFieldConfig,
     WorkflowStep,
+    WorkflowStepConfig,
 } from '@/components/automation/workflow.interface'
 import { capitalizeFirstLetter } from '@/util/util'
 import MultiSelect from '../MultiSelect.vue'
@@ -169,13 +213,87 @@ const connectors = ref<Connector[]>([])
 const connectorTypes = ref<ConnectorTypeConfig[]>([])
 const selectedConnectorIds = ref<string[]>([])
 const stepValues = ref<Record<string, Record<string, any>>>({})
-const stepActions = ref<Record<string, string[] | null>>({})
+type WorkflowStepActionEntry = {
+    action: string | null
+    requiredInformation: string[]
+}
+
+const stepActions = ref<Record<string, WorkflowStepActionEntry[]>>({})
 
 const typeConfig = computed<AvailableWorkflow | undefined>(() =>
     availableTypes.value.find((t) => t.name === workflow.value?.workflowType),
 )
 
 const fieldKey = (field: WorkflowFieldConfig) => field.name || field.label
+
+const actionName = (action: WorkflowActionConfig | string) =>
+    typeof action === 'string' ? action : action.name
+
+const actionRequiredInformation = (action: WorkflowActionConfig | string) =>
+    typeof action === 'string' ? [] : action.requiredInformation || []
+
+const configuredAction = (step: WorkflowStepConfig, name: string | null) =>
+    (step.availableActions || []).find((action) => actionName(action) === name)
+
+const selectedActionNames = (stepName: string, exceptIndex?: number) =>
+    new Set(
+        (stepActions.value[stepName] || [])
+            .filter((_, index) => index !== exceptIndex)
+            .map((entry) => entry.action)
+            .filter(Boolean),
+    )
+
+/** Connector type IDs (e.g. Gmail) covered by the workflow’s linked connectors. */
+const selectedConnectorTypeIds = computed(() => {
+    const ids = new Set<string>()
+    for (const id of selectedConnectorIds.value) {
+        const c = connectors.value.find((item) => item.id === id)
+        if (c?.connectorTypeId) ids.add(c.connectorTypeId)
+    }
+    return ids
+})
+
+const actionConnectorsNeeded = (step: WorkflowStepConfig, name: string | null) => {
+    if (!name) return [] as string[]
+    const action = configuredAction(step, name)
+    if (!action || typeof action === 'string') return []
+    return action.connectorsNeeded || []
+}
+
+const actionAllowedByLinkedConnectors = (step: WorkflowStepConfig, name: string) => {
+    const needed = actionConnectorsNeeded(step, name)
+    if (!needed.length) return true
+    const linked = selectedConnectorTypeIds.value
+    return needed.every((type) => linked.has(type))
+}
+
+const selectableActionNamesForStep = (step: WorkflowStepConfig) =>
+    (step.availableActions || [])
+        .map(actionName)
+        .filter((name) => actionAllowedByLinkedConnectors(step, name))
+
+const availableActionsForEntry = (step: WorkflowStepConfig, index: number) => {
+    const selected = selectedActionNames(step.name, index)
+    const currentAction = stepActions.value[step.name]?.[index]?.action ?? null
+    return (step.availableActions || [])
+        .map(actionName)
+        .filter((name) => !selected.has(name))
+        .filter(
+            (name) =>
+                actionAllowedByLinkedConnectors(step, name) || name === currentAction,
+        )
+}
+
+const requiredInformationForAction = (step: WorkflowStepConfig, name: string) => {
+    const action = configuredAction(step, name)
+    return action ? actionRequiredInformation(action) : []
+}
+
+const canAddAction = (step: WorkflowStepConfig) => {
+    const selected = selectedActionNames(step.name)
+    const selectable = selectableActionNamesForStep(step)
+    return selectable.some((name) => !selected.has(name))
+}
 
 const connectorTypeNames = computed(() => typeConfig.value?.connectorsNeeded || [])
 
@@ -242,6 +360,27 @@ const setFieldValue = (
     stepValues.value[stepName][fieldKey(field)] = value
 }
 
+const normalizeAllowedActions = (
+    allowedActions: WorkflowStep['allowedActions'],
+    step: WorkflowStepConfig,
+): WorkflowStepActionEntry[] => {
+    if (Array.isArray(allowedActions)) {
+        return allowedActions.map((action) => ({
+            action,
+            requiredInformation: requiredInformationForAction(step, action),
+        }))
+    }
+
+    if (allowedActions && typeof allowedActions === 'object') {
+        return Object.entries(allowedActions).map(([action, config]) => ({
+            action,
+            requiredInformation: config.requiredInformation || [],
+        }))
+    }
+
+    return step.availableActions?.length ? [{ action: null, requiredInformation: [] }] : []
+}
+
 const initStepValues = () => {
     stepValues.value = {}
     stepActions.value = {}
@@ -259,12 +398,46 @@ const initStepValues = () => {
             initial[key] = key in existingValues ? existingValues[key] : defaultValueFor(field)
         }
         stepValues.value[step.name] = initial
-        stepActions.value[step.name] = existing?.allowedActions || []
+        stepActions.value[step.name] = normalizeAllowedActions(existing?.allowedActions, step)
     }
 }
 
-const addAction = (stepName: string, action: string[]) => {
-    stepActions.value[stepName] = [...action]
+const addActionEntry = (stepName: string) => {
+    stepActions.value[stepName] = [
+        ...(stepActions.value[stepName] || []),
+        { action: null, requiredInformation: [] },
+    ]
+}
+
+const removeActionEntry = (stepName: string, index: number) => {
+    stepActions.value[stepName] = (stepActions.value[stepName] || []).filter((_, i) => i !== index)
+}
+
+const setActionEntry = (
+    step: WorkflowStepConfig,
+    index: number,
+    action: string | null,
+) => {
+    const entries = [...(stepActions.value[step.name] || [])]
+    entries[index] = {
+        action,
+        requiredInformation: [],
+    }
+    stepActions.value[step.name] = entries
+}
+
+const setActionRequiredInformation = (
+    stepName: string,
+    index: number,
+    requiredInformation: string[],
+) => {
+    const entries = [...(stepActions.value[stepName] || [])]
+    if (!entries[index]) return
+    entries[index] = {
+        ...entries[index],
+        requiredInformation: [...requiredInformation],
+    }
+    stepActions.value[stepName] = entries
 }
 
 const load = async () => {
@@ -312,11 +485,17 @@ const buildSteps = (): WorkflowStep[] => {
         for (const [key, value] of Object.entries(raw)) {
             values[key] = serializeValue(value)
         }
-        const selectedActions = stepActions.value[step.name]
+        const allowedActions: WorkflowAllowedActions = {}
+        for (const entry of stepActions.value[step.name] || []) {
+            if (!entry.action) continue
+            allowedActions[entry.action] = {
+                requiredInformation: [...entry.requiredInformation],
+            }
+        }
         return {
             name: step.name,
             values,
-            allowedActions: selectedActions || [],
+            allowedActions,
         }
     })
 }
@@ -325,8 +504,24 @@ const validateRequired = (): string | null => {
     const config = typeConfig.value
     if (!config) return null
     for (const step of config.steps || []) {
-        if (step.availableActions?.length && !stepActions.value[step.name]) {
+        if (step.availableActions?.length && !(stepActions.value[step.name] || []).some((entry) => entry.action)) {
             return `An action is required in step "${step.name}"`
+        }
+        const actionNames = (stepActions.value[step.name] || [])
+            .map((entry) => entry.action)
+            .filter(Boolean)
+        if (new Set(actionNames).size !== actionNames.length) {
+            return `Each action can only be selected once in step "${step.name}"`
+        }
+        for (const entry of stepActions.value[step.name] || []) {
+            if (!entry.action) continue
+            if (!actionAllowedByLinkedConnectors(step, entry.action)) {
+                const needed = actionConnectorsNeeded(step, entry.action)
+                return `Link ${needed.join(', ')} for action "${entry.action}" in step "${step.name}" (or pick another action)`
+            }
+            if (requiredInformationForAction(step, entry.action).length && !entry.requiredInformation.length) {
+                return `Required information is required for action "${entry.action}" in step "${step.name}"`
+            }
         }
         for (const field of step.fields || []) {
             if (!field.required) continue

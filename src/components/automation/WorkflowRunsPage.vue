@@ -62,6 +62,13 @@
                             <div class="text-opposite/70" v-if="run.currentStep && run.status !== 'completed'">
                                 <span class="text-opposite/50">Current Step:</span> {{ run.currentStep || '-' }}
                             </div>
+                            <div class="text-opposite/70" v-if="run.displayContext">
+                                <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
+                                    :key="key">
+                                    <span class="text-opposite/50">{{ key }}:</span> {{
+                                        formatIfTimestamp(run.displayContext[key]) }}
+                                </div>
+                            </div>
                         </div>
                         <div class="" v-if="run.explanation">
                             <span class="text-opposite/50 text-sm"> Explanation on why the workflow was not
@@ -130,7 +137,7 @@ import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
-import { formatDate } from '@/util/util'
+import { formatDate, formatIfTimestamp } from '@/util/util'
 import { getWorkflowRuns } from '@/components/automation/endpoints'
 import type { WorkflowRun } from '@/components/automation/workflow.interface'
 import Select2 from '../Select2.vue'

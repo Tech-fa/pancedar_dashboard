@@ -25,7 +25,13 @@ export interface WorkflowConnectorSummary {
 export interface WorkflowStep {
   name: string;
   values: Record<string, any>;
-  allowedActions?: string[];
+  allowedActions?: WorkflowAllowedActions | string[];
+}
+
+export interface WorkflowAllowedActions {
+  [action: string]: {
+    requiredInformation: string[];
+  };
 }
 
 export type WorkflowFieldType =
@@ -49,7 +55,15 @@ export interface WorkflowStepConfig {
   name: string;
   description?: string;
   fields: WorkflowFieldConfig[];
-  availableActions?: string[];
+  availableActions?: WorkflowActionConfig[];
+}
+
+export interface WorkflowActionConfig {
+  name: string;
+  description?: string;
+  requiredInformation: string[];
+  /** Connector type names (e.g. Gmail); all must be linked on the workflow to use this action. */
+  connectorsNeeded?: string[];
 }
 
 export interface AvailableWorkflow {
@@ -86,6 +100,7 @@ export interface WorkflowRun {
     subject: string;
     id: string;
   };
+  displayContext: Record<string, any> | null;
 }
 
 export interface AgentCommunication {

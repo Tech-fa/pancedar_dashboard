@@ -34,6 +34,12 @@
                                 :href="(getAwaitingActionRoute(run) as string)" target="_blank">
                                 >
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
+                                <div class="text-opposite/70" v-if="run.displayContext">
+                                    <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
+                                        :key="key">
+                                        <span class="text-opposite/50">{{ key }}:</span> {{ run.displayContext[key] }}
+                                    </div>
+                                </div>
                                 <div class="text-opposite/60">Step: {{ run.currentStep || '-' }}</div>
                                 <div class="text-opposite/60">Updated: {{ formatDate(run.updatedAt) }}</div>
                             </a>
@@ -55,6 +61,12 @@
                             <article v-for="run in inProgress.runs" :key="run.id"
                                 class="bg-secondary rounded border border-gray-800 p-3 text-sm space-y-2">
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
+                                <div class="text-opposite/70" v-if="run.displayContext">
+                                    <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
+                                        :key="key">
+                                        <span class="text-opposite/50">{{ key }}:</span> {{ run.displayContext[key] }}
+                                    </div>
+                                </div>
                                 <div class="text-opposite/60">Status: {{ run.status }}</div>
                                 <div class="text-opposite/60">Updated: {{ formatDate(run.updatedAt) }}</div>
                             </article>
@@ -73,9 +85,16 @@
                             No runs.
                         </div>
                         <div v-else class="space-y-2 flex flex-col">
-                            <a v-for="run in done.runs" :key="run.id" :href="(getCompletedRoute(run) as string)" target="_blank"
+                            <a v-for="run in done.runs" :key="run.id" :href="(getCompletedRoute(run) as string)"
+                                target="_blank"
                                 class="bg-secondary rounded border border-gray-800 p-3 text-sm space-y-2">
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
+                                <div class="text-opposite/70" v-if="run.displayContext">
+                                    <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
+                                        :key="key">
+                                        <span class="text-opposite/50">{{ key }}:</span> {{ run.displayContext[key] }}
+                                    </div>
+                                </div>
                                 <div class="text-opposite/60">Status: {{ run.status }}</div>
                                 <div class="text-opposite/60">Updated: {{ formatDate(run.updatedAt) }}</div>
                             </a>
