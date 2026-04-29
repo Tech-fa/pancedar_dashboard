@@ -59,13 +59,14 @@
                             <div class="text-opposite/70">
                                 <span class="text-opposite/50">Updated:</span> {{ formatDate(run.updatedAt) }}
                             </div>
-                            <div class="text-opposite/70">
+                            <div class="text-opposite/70" v-if="run.currentStep && run.status !== 'completed'">
                                 <span class="text-opposite/50">Current Step:</span> {{ run.currentStep || '-' }}
                             </div>
                         </div>
                         <div class="" v-if="run.explanation">
-                           <span class="text-opposite/50 text-sm"> Explanation on why the workflow was not completed:</span>  <span class=" font-bold text-opposite"> {{
-                                run.explanation.explanation }}</span>
+                            <span class="text-opposite/50 text-sm"> Explanation on why the workflow was not
+                                completed:</span> <span class=" font-bold text-opposite"> {{
+                                    run.explanation.explanation }}</span>
                         </div>
 
                         <div v-if="run.status === 'awaiting_action'"
@@ -81,6 +82,13 @@
                                 Manually Approve
                             </a>
                         </div>
+                        <div v-if="run.status === 'completed' && getCompletedRoute(run)" class="pt-1"> <a
+                                class="text-blue-400 hover:text-blue-300 text-sm p-0 cursor-pointer"
+                                :href="(getCompletedRoute(run) as string)" target="_blank">
+                                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>
+                                View Details
+                            </a></div>
+
                     </div>
                     <div v-if="totalCount > 10"
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-opposite/70 bg-main rounded-lg border border-gray-800 px-4 py-3">
@@ -126,11 +134,9 @@ import { formatDate } from '@/util/util'
 import { getWorkflowRuns } from '@/components/automation/endpoints'
 import type { WorkflowRun } from '@/components/automation/workflow.interface'
 import Select2 from '../Select2.vue'
+import { getAwaitingActionRoute, getAwaitingActionStep, getCompletedRoute } from './dto'
 
-type RelatedView = {
-    subject?: string
-    id?: string
-}
+
 
 const route = useRoute()
 const router = useRouter()
@@ -164,9 +170,6 @@ const rangeEnd = computed(() => {
     return Math.min(currentPage.value * perPage.value, totalCount.value)
 })
 
-const relatedViewRouteMap: Record<string, (id: string) => string> = {
-    incoming_emails: (id: string) => `/automation/incoming-emails/${id}`,
-}
 
 const crumbs = computed(() => ([
     { name: 'Automation', path: '/automation/workflows', icon: 'fa-solid fa-robot text-neutral-700 text-2xl' },
@@ -185,41 +188,7 @@ const statusClass = (status: string) => {
 
 
 
-const getRelatedView = (run: WorkflowRun): RelatedView | null => {
-    const lastStepContext = run.stepsContext?.[run.currentStep as string]
-    if (!lastStepContext || typeof lastStepContext !== 'object') {
-        return null
-    }
-    const fromSingular = lastStepContext.relatedView
-    const fromPlural = lastStepContext.relatedViews
-    const relatedView = fromSingular || fromPlural
-    if (!relatedView || typeof relatedView !== 'object') {
-        return null
-    }
-    return relatedView as RelatedView
-}
 
-const getAwaitingActionStep = (run: WorkflowRun): string | null => {
-    if (run.status !== 'awaiting_action') {
-        return null
-    }
-    return run.currentStep || null
-}
-
-const getAwaitingActionRoute = (run: WorkflowRun): string | null => {
-    if (run.status !== 'awaiting_action') {
-        return null
-    }
-    const relatedView = getRelatedView(run)
-    if (!relatedView?.subject || !relatedView.id) {
-        return null
-    }
-    const routeResolver = relatedViewRouteMap[relatedView.subject]
-    if (!routeResolver) {
-        return null
-    }
-    return routeResolver(relatedView.id)
-}
 
 
 

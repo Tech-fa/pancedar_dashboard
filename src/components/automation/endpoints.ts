@@ -1,6 +1,7 @@
 import type { AuthStore, PaginatedResponse } from "@/util/interfaces";
 import { apiDelete, apiGet, apiPost, apiPut } from "@/util/api";
 import type {
+  AgentCommunication,
   AvailableWorkflow,
   CreateWorkflowPayload,
   UpdateWorkflowStepsPayload,
@@ -98,13 +99,23 @@ export const getWorkflowRuns = (
 export const getWorkflowRunsByStatus = (
   id: string | null,
   authStore: AuthStore,
-  status: "awaiting_action" | "in_progress" | "completed",
+  status: "awaiting_action" | "pending" | "completed",
   pagination: { page?: number; perPage?: number },
 ) => {
   return apiGet<PaginatedResponse<WorkflowRun>>(
     id ? `/workflows/${id}/runs/${status}` : `/workflows/runs/${status}`,
     authStore,
     pagination,
+  );
+};
+
+export const getWorkflowRunCommunications = (
+  workflowRunId: string,
+  authStore: AuthStore,
+) => {
+  return apiGet<AgentCommunication[]>(
+    `/agent-communications/workflow-runs/${workflowRunId}`,
+    authStore,
   );
 };
 

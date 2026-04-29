@@ -6,11 +6,17 @@
             <div class="max-w-7xl mx-auto">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-medium text-opposite">Workflows</h3>
-                    <button type="button" @click="goToNewWorkflow"
-                        class="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                        <i class="fa-solid fa-plus"></i>
-                        Add Workflow
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <AppButton buttonStyle="primary" @click="goToNewWorkflow">
+                            Add Workflow
+                        </AppButton>
+                        <AppButton buttonStyle="void"
+                            class="text-amber-500 hover:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                            @click="viewWorkflowRunsKanban()">
+                            <i class="fa-solid fa-table-columns"></i>
+                            <span>Kanban</span>
+                        </AppButton>
+                    </div>
                 </div>
 
                 <div v-if="loadingWorkflows" class="flex items-center justify-center py-12">
@@ -26,7 +32,8 @@
                     <div v-for="wf in workflows" :key="wf.id"
                         class="bg-main rounded-md border border-gray-700/80 p-5 flex items-start justify-between gap-4 transition-all duration-200 hover:border-gray-500 hover:shadow-md hover:shadow-black/20">
                         <div class="min-w-0">
-                            <div class="text-opposite font-semibold text-base truncate">{{ capitalizeFirstLetter(wf.name) }}</div>
+                            <div class="text-opposite font-semibold text-base truncate">{{
+                                capitalizeFirstLetter(wf.name) }}</div>
                             <div class="text-opposite/50 font-semibold text-xs truncate">{{ wf.workflowType }}</div>
                             <div v-if="wf.description" class="text-sm text-opposite/80 mt-1">
                                 {{ wf.description }}
@@ -40,19 +47,19 @@
                             <Can :subject="'workflows'" :actions="['read']">
                                 <div class="flex items-center gap-2">
                                     <AppButton buttonStyle="void"
-                                        class="text-purple-300 hover:text-purple-200 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                        class="text-purple-500 hover:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                         @click="viewWorkflowRuns(wf)">
                                         <i class="fa-solid fa-clock-rotate-left"></i>
                                         <span>History</span>
                                     </AppButton>
                                     <AppButton buttonStyle="void"
-                                        class="text-amber-300 hover:text-amber-200 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                        class="text-amber-500 hover:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                         @click="viewWorkflowRunsKanban(wf)">
                                         <i class="fa-solid fa-table-columns"></i>
                                         <span>Kanban</span>
                                     </AppButton>
                                     <AppButton buttonStyle="void"
-                                        class="text-blue-300 hover:text-blue-200 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                        class="text-blue-500 hover:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                         @click="viewWorkflow(wf)">
                                         <i class="fa-solid fa-eye"></i>
                                         <span>View</span>
@@ -62,7 +69,7 @@
                             <Can :subject="'workflows'" :actions="['delete']">
                                 <div class="flex items-center gap-2">
                                     <AppButton buttonStyle="void"
-                                        class="text-red-300 hover:text-red-200 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                        class="text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                         :warnBefore="`Are you sure you want to delete workflow &quot;${wf.name}&quot;?`"
                                         @click="deleteWorkflowConfirmed(wf)">
                                         <i class="fa-solid fa-trash"></i>
@@ -118,8 +125,12 @@ function viewWorkflowRuns(wf: Workflow) {
     router.push(`/automation/workflows/${wf.id}/runs`)
 }
 
-function viewWorkflowRunsKanban(wf: Workflow) {
-    router.push(`/automation/workflows/${wf.id}/runs/kanban`)
+function viewWorkflowRunsKanban(wf?: Workflow) {
+    if (wf) {
+        router.push(`/automation/workflows/${wf.id}/runs/kanban`)
+    } else {
+        router.push(`/automation/workflows/kanban`)
+    }
 }
 
 const deleteWorkflowConfirmed = async (wf: Workflow) => {

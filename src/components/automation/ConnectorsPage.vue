@@ -70,7 +70,7 @@
                                 </div>
                             </div>
 
-                            <div v-if="credentialEditor && fieldsForConnectorType(typeName).length"
+                            <div v-if="credentialEditor && fieldsForConnectorType(typeName).length && addingType == typeName"
                                 class="rounded-md border border-gray-700 bg-secondary/50 p-4 mb-3 space-y-3">
                                 <div class="text-xs font-medium text-opposite/80">
                                     Connection details
@@ -98,7 +98,7 @@
                             </div>
 
                             <div class="mt-auto">
-                                <AppButton buttonStyle="secondary" type="button" :loading="addingType === typeName"
+                                <AppButton buttonStyle="secondary" type="button" :loading="loadingAddingType"
                                     @click="onAddConnection(typeName)">
                                     <i class="fa-solid fa-plus mr-1"></i>
                                     Add Connection
@@ -128,7 +128,6 @@ import {
     deleteConnector,
     addConnection,
     disconnectConnector,
-    updateConnector,
     type Connector,
     type ConnectorTypeConfig,
     type ConnectorTypeField,
@@ -148,6 +147,7 @@ const neededConnectors = ref<string[]>([])
 const connectors = ref<Connector[]>([])
 const connectorTypes = ref<ConnectorTypeConfig[]>([])
 const addingType = ref<string | null>(null)
+const loadingAddingType = ref(false)
 const credentialEditor = ref(false)
 const credentialValues = reactive<Record<string, unknown>>({})
 const credentialFieldErrors = reactive<Record<string, string>>({})
@@ -265,6 +265,7 @@ const saveCredentialEditor = async (typeName: string) => {
         )
     } finally {
         savingCredentialsId.value = null
+        addingType.value = null
     }
 }
 
@@ -344,9 +345,10 @@ const handleMessage = (event: MessageEvent) => {
 const onAddConnection = async (typeName: string) => {
     if (connectorTypes.value.find(t => t.name === typeName)?.fields?.length) {
         openCredentialEditor(typeName);
+        addingType.value = typeName
         return;
     }
-    addingType.value = typeName
+    loadingAddingType.value = true
     try {
         const resp = await addConnection({ connectorTypeName: typeName }, authStore)
         if (resp?.oauthUrl) {
@@ -368,7 +370,7 @@ const onAddConnection = async (typeName: string) => {
     } catch (error: any) {
         toast.showToast('Error', error?.response?.data?.message || 'Failed to add connection', 'error')
     } finally {
-        addingType.value = null
+        loadingAddingType.value = false
     }
 }
 

@@ -29,12 +29,14 @@
                             No runs.
                         </div>
                         <div v-else class="space-y-2">
-                            <article v-for="run in awaiting.runs" :key="run.id"
-                                class="bg-secondary rounded border border-gray-800 p-3 text-sm space-y-2">
+                            <a v-for="run in awaiting.runs" :key="run.id"
+                                class="bg-secondary rounded border border-gray-800 p-3 text-sm space-y-2"
+                                :href="(getAwaitingActionRoute(run) as string)" target="_blank">
+                                >
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
                                 <div class="text-opposite/60">Step: {{ run.currentStep || '-' }}</div>
                                 <div class="text-opposite/60">Updated: {{ formatDate(run.updatedAt) }}</div>
-                            </article>
+                            </a>
                         </div>
                     </section>
 
@@ -70,13 +72,13 @@
                         <div v-else-if="done.runs.length === 0" class="text-sm text-opposite/50 py-6 text-center">
                             No runs.
                         </div>
-                        <div v-else class="space-y-2">
-                            <article v-for="run in done.runs" :key="run.id"
+                        <div v-else class="space-y-2 flex flex-col">
+                            <a v-for="run in done.runs" :key="run.id" :href="(getCompletedRoute(run) as string)" target="_blank"
                                 class="bg-secondary rounded border border-gray-800 p-3 text-sm space-y-2">
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
                                 <div class="text-opposite/60">Status: {{ run.status }}</div>
                                 <div class="text-opposite/60">Updated: {{ formatDate(run.updatedAt) }}</div>
-                            </article>
+                            </a>
                         </div>
                     </section>
                 </div>
@@ -98,6 +100,7 @@ import {
     getWorkflowRunsByStatus,
 } from '@/components/automation/endpoints'
 import type { WorkflowRun } from '@/components/automation/workflow.interface'
+import { getAwaitingActionRoute, getCompletedRoute } from './dto'
 
 type KanbanColumnState = {
     loading: boolean
@@ -149,7 +152,7 @@ const loadAwaiting = async () => {
 const loadInProgress = async () => {
     inProgress.value.loading = true
     try {
-        const res = await getWorkflowRunsByStatus(workflowId.value, authStore, "in_progress", { page: 1, perPage })
+        const res = await getWorkflowRunsByStatus(workflowId.value, authStore, "pending", { page: 1, perPage })
         inProgress.value.runs = res.data
         inProgress.value.totalCount = res.totalCount
     } finally {

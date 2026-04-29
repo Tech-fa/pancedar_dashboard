@@ -45,7 +45,7 @@
                             @click="handleSelect(result)"
                             @keydown.enter="handleSelect(result)"
                             tabindex="0"
-                            class="hover:bg-gray-600 cursor-pointer relative select-none py-2 pl-10 pr-4 text-opposite"
+                            class="hover:bg-gray-300 cursor-pointer relative select-none py-2 pl-10 pr-4 text-opposite"
                         >
                             <span class="block truncate font-medium">
                                 {{ display(result) }}
@@ -62,7 +62,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 
 const model = defineModel<any>()
 const props = defineProps<{
-    values: { [key: string]: any }[]
+    values: any[]
     placeholder: string
     display: Function
 }>()
@@ -82,8 +82,6 @@ const remove = (select: any) => {
 }
 
 const handleSelect = (result: any) => {
-    console.log(result)
-    console.log(model.value)
     if (!model.value.includes(result)) {
         model.value = [...model.value, result]
     }

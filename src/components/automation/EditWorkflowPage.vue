@@ -19,26 +19,14 @@
 
                 <div v-else class="bg-secondary rounded-lg border border-gray-800 p-6 space-y-4">
                     <div>
-                        <label class="block text-xs text-opposite/60 mb-1 ml-1">Workflow Type</label>
-                        <div class="bg-main border border-gray-800 rounded-md px-3 py-2 text-sm text-opposite/80">
-                            {{ typeConfig?.name || workflow.workflowType }}
-                        </div>
-                        <label class="block text-xs text-opposite/60 mb-1 ml-1">Workflow Name</label>
-                        <div class="bg-main border border-gray-800 rounded-md px-3 py-2 text-sm text-opposite/80">
-                            {{ workflow.name }}
-                        </div>
-                        <p v-if="typeConfig?.description" class="text-xs text-opposite/60 mt-2 ml-1">
-                            {{ typeConfig.description }}
-                        </p>
+                        <h1 class="text-2xl font-medium text-opposite">
+                            {{ capitalizeFirstLetter(workflow.name) }}
+                        </h1>
+                        <span class="text-base text-opposite/60 ml-2">{{ workflow.workflowType }}</span>
+
                     </div>
 
-                    <div>
-                        <label class="block text-xs text-opposite/60 mb-1 ml-1">Description</label>
-                        <div
-                            class="bg-main border border-gray-800 rounded-md px-3 py-2 text-sm text-opposite/80 min-h-[2.25rem]">
-                            {{ workflow.description || '—' }}
-                        </div>
-                    </div>
+
 
                     <div v-if="connectorTypeNames.length" class="pt-2 space-y-4">
                         <div class="flex items-start justify-between gap-3">
@@ -68,32 +56,14 @@
                             </div>
 
                             <div v-if="connectorsForType(typeName).length" class="space-y-2">
-                                <label v-for="connector in connectorsForType(typeName)" :key="connector.id"
-                                    :class="[
-                                        'flex items-center justify-between gap-3 rounded-md bg-secondary px-3 py-2 border',
-                                        connectorDisabled(connector)
-                                            ? 'border-gray-800 opacity-60 cursor-not-allowed'
-                                            : 'border-gray-800 cursor-pointer hover:border-gray-700',
-                                    ]">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <input type="checkbox"
-                                            class="rounded border-gray-700 bg-main text-primary focus:ring-primary"
-                                            :checked="selectedConnectorIds.includes(connector.id)"
-                                            :disabled="connectorDisabled(connector)"
-                                            @change="onConnectorToggle(connector.id, $event)" />
-                                        <span
-                                            :class="['w-2 h-2 rounded-full shrink-0', connector.status === 'active' ? 'bg-green-500' : 'bg-red-500']"></span>
-                                        <span class="min-w-0">
-                                            <span class="block text-sm text-opposite truncate">{{ connector.name }}</span>
-                                            <span class="block text-xs text-opposite/60 truncate">
-                                                {{ connector.primaryIdentifier || connector.status }}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <span v-if="connectorDisabled(connector)" class="text-xs text-opposite/50 shrink-0">
-                                        Linked to {{ linkedWorkflowName(connector) }}
-                                    </span>
-                                </label>
+                                <Select2 :modelValue="selectedConnectorForType(typeName)"
+                                    :values="connectorOptionsForType(typeName)" :display="displayConnectorOption"
+                                    :placeholder="`Select ${typeName} connector...`" :optional="true"
+                                    @update:modelValue="(connector: Connector | null) => onConnectorSelect(typeName, connector)" />
+                                <div v-if="selectedConnectorForType(typeName) && connectorDisabled(selectedConnectorForType(typeName)!)"
+                                    class="text-xs text-opposite/50">
+                                    Linked to {{ linkedWorkflowName(selectedConnectorForType(typeName)!) }}
+                                </div>
                             </div>
 
                             <div v-else class="text-xs text-opposite/60 bg-secondary rounded p-3">
@@ -121,9 +91,17 @@
                                     :modelValue="stepValues[step.name]?.[fieldKey(field)]"
                                     @update:modelValue="(v: any) => setFieldValue(step.name, field, v)" />
                             </div>
-                            <div v-else class="text-xs text-opposite/40 pl-4">
+                            <div v-if="step.availableActions?.length" class="space-y-1 pl-4 border-l border-gray-800">
+                                <div class="text-xs text-opposite/60">Action <span class="text-red-400">*</span></div>
+                                <MultiSelect :modelValue="stepActions[step.name]" :values="step.availableActions"
+                                    :display="(action: string) => action" placeholder="Select an action"
+                                    @update:modelValue="(value: string[]) => addAction(step.name, value)" />
+                            </div>
+                            <div v-if="!step.fields?.length && !step.availableActions?.length"
+                                class="text-xs text-opposite/40 pl-4">
                                 No configuration needed for this step.
                             </div>
+
                         </div>
                     </div>
 
@@ -150,6 +128,7 @@ import BreadCrums from '@/components/breadCrums.vue'
 import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
 import Can from '@/components/Can.vue'
+import Select2 from '@/components/Select2.vue'
 import WorkflowFieldInput from './WorkflowFieldInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
@@ -168,6 +147,8 @@ import type {
     WorkflowFieldConfig,
     WorkflowStep,
 } from '@/components/automation/workflow.interface'
+import { capitalizeFirstLetter } from '@/util/util'
+import MultiSelect from '../MultiSelect.vue'
 
 const crumbs = [
     { name: 'Automation', path: '/automation/workflows', icon: 'fa-solid fa-robot text-neutral-700 text-2xl' },
@@ -188,6 +169,7 @@ const connectors = ref<Connector[]>([])
 const connectorTypes = ref<ConnectorTypeConfig[]>([])
 const selectedConnectorIds = ref<string[]>([])
 const stepValues = ref<Record<string, Record<string, any>>>({})
+const stepActions = ref<Record<string, string[] | null>>({})
 
 const typeConfig = computed<AvailableWorkflow | undefined>(() =>
     availableTypes.value.find((t) => t.name === workflow.value?.workflowType),
@@ -209,6 +191,9 @@ const connectorTypeAllowsMultiple = (typeName: string) =>
 const connectorsForType = (typeName: string) =>
     connectors.value.filter((connector) => connector.connectorTypeId === typeName)
 
+const displayConnectorOption = (connector: Connector | null) =>
+    connector ? `${connector.name} (${connector.primaryIdentifier || connector.status})` : ''
+
 const linkedWorkflowName = (connector: Connector) =>
     connector.linkedWorkflows?.find((linkedWorkflow) => linkedWorkflow.id !== workflow.value?.id)?.name || 'another workflow'
 
@@ -217,18 +202,25 @@ const connectorDisabled = (connector: Connector) => {
     return !!connector.linkedWorkflows?.some((linkedWorkflow) => linkedWorkflow.id !== workflow.value?.id)
 }
 
-const toggleConnector = (connectorId: string, checked: boolean) => {
-    if (checked) {
-        if (!selectedConnectorIds.value.includes(connectorId)) {
-            selectedConnectorIds.value = [...selectedConnectorIds.value, connectorId]
-        }
-        return
-    }
-    selectedConnectorIds.value = selectedConnectorIds.value.filter((id) => id !== connectorId)
+const selectedConnectorForType = (typeName: string) => {
+    const selectedIds = new Set(selectedConnectorIds.value)
+    return connectorsForType(typeName).find((connector) => selectedIds.has(connector.id)) || null
 }
 
-const onConnectorToggle = (connectorId: string, event: Event) => {
-    toggleConnector(connectorId, (event.target as HTMLInputElement).checked)
+const connectorOptionsForType = (typeName: string) => {
+    const selected = selectedConnectorForType(typeName)
+    return connectorsForType(typeName).filter((connector) =>
+        !connectorDisabled(connector) || connector.id === selected?.id,
+    )
+}
+
+const onConnectorSelect = (typeName: string, connector: Connector | null) => {
+    const selectedId = connector?.id
+    const retainedIds = selectedConnectorIds.value.filter((id) => {
+        const existing = connectors.value.find((item) => item.id === id)
+        return existing?.connectorTypeId !== typeName
+    })
+    selectedConnectorIds.value = selectedId ? [...retainedIds, selectedId] : retainedIds
 }
 
 const defaultValueFor = (field: WorkflowFieldConfig) => {
@@ -252,20 +244,27 @@ const setFieldValue = (
 
 const initStepValues = () => {
     stepValues.value = {}
+    stepActions.value = {}
     const config = typeConfig.value
     if (!config) return
-    const existingByStep = new Map(
-        (workflow.value?.steps || []).map((s) => [s.name, s.values || {}]),
+    const existingByStep = new Map<string, WorkflowStep>(
+        (workflow.value?.steps || []).map((s) => [s.name, s]),
     )
     for (const step of config.steps || []) {
         const initial: Record<string, any> = {}
-        const existing = existingByStep.get(step.name) || {}
+        const existing = existingByStep.get(step.name)
+        const existingValues = existing?.values || {}
         for (const field of step.fields || []) {
             const key = fieldKey(field)
-            initial[key] = key in existing ? existing[key] : defaultValueFor(field)
+            initial[key] = key in existingValues ? existingValues[key] : defaultValueFor(field)
         }
         stepValues.value[step.name] = initial
+        stepActions.value[step.name] = existing?.allowedActions || []
     }
+}
+
+const addAction = (stepName: string, action: string[]) => {
+    stepActions.value[stepName] = [...action]
 }
 
 const load = async () => {
@@ -313,7 +312,12 @@ const buildSteps = (): WorkflowStep[] => {
         for (const [key, value] of Object.entries(raw)) {
             values[key] = serializeValue(value)
         }
-        return { name: step.name, values }
+        const selectedActions = stepActions.value[step.name]
+        return {
+            name: step.name,
+            values,
+            allowedActions: selectedActions || [],
+        }
     })
 }
 
@@ -321,6 +325,9 @@ const validateRequired = (): string | null => {
     const config = typeConfig.value
     if (!config) return null
     for (const step of config.steps || []) {
+        if (step.availableActions?.length && !stepActions.value[step.name]) {
+            return `An action is required in step "${step.name}"`
+        }
         for (const field of step.fields || []) {
             if (!field.required) continue
             const value = stepValues.value[step.name]?.[fieldKey(field)]
@@ -355,6 +362,7 @@ const save = async () => {
         workflow.value = updated
         selectedConnectorIds.value = updated.linkedConnectors?.map((connector) => connector.id) || []
         toast.showToast('Saved', 'Workflow updated successfully', 'success')
+        router.push(`/automation/workflows`)
     } catch (error: any) {
         toast.showToast('Error', error?.response?.data?.message || 'Failed to update workflow', 'error')
     } finally {
