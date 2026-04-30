@@ -105,7 +105,8 @@
                                         </p>
                                     </div>
                                     <button type="button" class="text-xs text-primary hover:underline"
-                                        :disabled="!canAddAction(step)" :class="{ 'opacity-40 cursor-not-allowed': !canAddAction(step) }"
+                                        :disabled="!canAddAction(step)"
+                                        :class="{ 'opacity-40 cursor-not-allowed': !canAddAction(step) }"
                                         @click="addActionEntry(step.name)">
                                         Add action
                                     </button>
@@ -267,10 +268,11 @@ const actionAllowedByLinkedConnectors = (step: WorkflowStepConfig, name: string)
     return needed.every((type) => linked.has(type))
 }
 
-const selectableActionNamesForStep = (step: WorkflowStepConfig) =>
-    (step.availableActions || [])
+const selectableActionNamesForStep = (step: WorkflowStepConfig) =>{
+   return  (step.availableActions || [])
         .map(actionName)
         .filter((name) => actionAllowedByLinkedConnectors(step, name))
+}
 
 const availableActionsForEntry = (step: WorkflowStepConfig, index: number) => {
     const selected = selectedActionNames(step.name, index)
@@ -378,7 +380,10 @@ const normalizeAllowedActions = (
         }))
     }
 
-    return step.availableActions?.length ? [{ action: null, requiredInformation: [] }] : []
+    return (step.availableActions || []).map((action) => ({
+        action: action.name,
+        requiredInformation: action.requiredInformation || [],
+    }))
 }
 
 const initStepValues = () => {
@@ -400,6 +405,7 @@ const initStepValues = () => {
         stepValues.value[step.name] = initial
         stepActions.value[step.name] = normalizeAllowedActions(existing?.allowedActions, step)
     }
+    console.log(stepActions.value)
 }
 
 const addActionEntry = (stepName: string) => {
@@ -504,9 +510,7 @@ const validateRequired = (): string | null => {
     const config = typeConfig.value
     if (!config) return null
     for (const step of config.steps || []) {
-        if (step.availableActions?.length && !(stepActions.value[step.name] || []).some((entry) => entry.action)) {
-            return `An action is required in step "${step.name}"`
-        }
+
         const actionNames = (stepActions.value[step.name] || [])
             .map((entry) => entry.action)
             .filter(Boolean)
