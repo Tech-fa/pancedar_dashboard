@@ -83,8 +83,11 @@ export interface IncomingEmailReview {
 }
 
 // Workflow endpoints
-export const getWorkflows = (authStore: AuthStore) => {
-  return apiGet<Workflow[]>("/workflows", authStore);
+export const getWorkflows = (
+  authStore: AuthStore,
+  filter?: { workflowType?: string },
+) => {
+  return apiGet<Workflow[]>("/workflows", authStore, filter);
 };
 
 export const getAvailableWorkflows = (authStore: AuthStore) => {
@@ -205,12 +208,12 @@ export const getConnectorTypes = (authStore: AuthStore) => {
 };
 
 export const getKijiLinks = (
-  connectorId: string,
+  workflowId: string,
   authStore: AuthStore,
   limit = 100,
 ) => {
   return apiGet<KijiLink[]>(
-    `/kijiji-link-tracking/${connectorId}/links`,
+    `/kijiji-link-tracking/${workflowId}/links`,
     authStore,
     { limit },
   );
