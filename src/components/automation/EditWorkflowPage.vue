@@ -56,13 +56,17 @@
                             </div>
 
                             <div v-if="connectorsForType(typeName).length" class="space-y-2">
-                                <Select2 :modelValue="selectedConnectorForType(typeName)"
+                                <MultiSelect v-if="workflowAllowsMultipleConnectors"
+                                    :modelValue="selectedConnectorsForType(typeName)"
+                                    :values="connectorOptionsForType(typeName)" :display="displayConnectorOption"
+                                    :placeholder="`Select ${typeName} connectors...`"
+                                    @update:modelValue="(selected: Connector[]) => onConnectorMultiSelect(typeName, selected)" />
+                                <Select2 v-else :modelValue="selectedConnectorForType(typeName)"
                                     :values="connectorOptionsForType(typeName)" :display="displayConnectorOption"
                                     :placeholder="`Select ${typeName} connector...`" :optional="true"
                                     @update:modelValue="(connector: Connector | null) => onConnectorSelect(typeName, connector)" />
-                                <div v-if="selectedConnectorForType(typeName) && connectorDisabled(selectedConnectorForType(typeName)!)"
-                                    class="text-xs text-opposite/50">
-                                    Linked to {{ linkedWorkflowName(selectedConnectorForType(typeName)!) }}
+                                <div v-if="selectedDisabledConnectorsForType(typeName).length" class="text-xs text-opposite/50">
+                                    Linked to {{ selectedDisabledConnectorsForType(typeName).map(linkedWorkflowName).join(', ') }}
                                 </div>
                             </div>
 
@@ -299,6 +303,8 @@ const canAddAction = (step: WorkflowStepConfig) => {
 
 const connectorTypeNames = computed(() => typeConfig.value?.connectorsNeeded || [])
 
+const workflowAllowsMultipleConnectors = computed(() => typeConfig.value?.allowMultiple ?? false)
+
 const connectorTypeConfig = (typeName: string) =>
     connectorTypes.value.find((t) => t.name === typeName)
 
@@ -327,10 +333,18 @@ const selectedConnectorForType = (typeName: string) => {
     return connectorsForType(typeName).find((connector) => selectedIds.has(connector.id)) || null
 }
 
+const selectedConnectorsForType = (typeName: string) => {
+    const selectedIds = new Set(selectedConnectorIds.value)
+    return connectorsForType(typeName).filter((connector) => selectedIds.has(connector.id))
+}
+
+const selectedDisabledConnectorsForType = (typeName: string) =>
+    selectedConnectorsForType(typeName).filter(connectorDisabled)
+
 const connectorOptionsForType = (typeName: string) => {
-    const selected = selectedConnectorForType(typeName)
+    const selectedIds = new Set(selectedConnectorsForType(typeName).map((connector) => connector.id))
     return connectorsForType(typeName).filter((connector) =>
-        !connectorDisabled(connector) || connector.id === selected?.id,
+        !connectorDisabled(connector) || selectedIds.has(connector.id),
     )
 }
 
@@ -341,6 +355,17 @@ const onConnectorSelect = (typeName: string, connector: Connector | null) => {
         return existing?.connectorTypeId !== typeName
     })
     selectedConnectorIds.value = selectedId ? [...retainedIds, selectedId] : retainedIds
+}
+
+const onConnectorMultiSelect = (typeName: string, selectedConnectors: Connector[]) => {
+    const retainedIds = selectedConnectorIds.value.filter((id) => {
+        const existing = connectors.value.find((item) => item.id === id)
+        return existing?.connectorTypeId !== typeName
+    })
+    selectedConnectorIds.value = [
+        ...retainedIds,
+        ...selectedConnectors.map((connector) => connector.id),
+    ]
 }
 
 const defaultValueFor = (field: WorkflowFieldConfig) => {

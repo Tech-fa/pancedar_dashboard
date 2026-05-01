@@ -131,7 +131,7 @@ const kijijiConnectors = computed(() =>
     connectors.value.filter((connector) =>
         `${connector.connectorTypeId} ${connector.name || ''}`
             .toLowerCase()
-            .includes('kiji'),
+            .includes('kijiji'),
     ),
 )
 
@@ -140,7 +140,7 @@ const displayConnectors = computed(() =>
 )
 
 const connectorLabel = (connector: Connector) =>
-    connector.name || connector.primaryIdentifier || connector.connectorTypeId || connector.id
+   connector.primaryIdentifier || connector.name ||  connector.connectorTypeId || connector.id
 
 const formatLinkDate = (value?: string) => {
     if (!value) return '-'

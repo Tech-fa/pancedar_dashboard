@@ -70,6 +70,7 @@ export interface AvailableWorkflow {
   name: string;
   description: string;
   connectorsNeeded?: string[];
+  allowMultiple?: boolean;
   steps: WorkflowStepConfig[];
 }
 
