@@ -54,9 +54,9 @@
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-2 shrink-0">
-
+                                      
                                         <AppButton buttonStyle="void"
-                                            v-if="c.status === 'inactive' && fieldsForConnectorType(typeName).length === 0"
+                                            v-if="c.status !== 'active' && fieldsForConnectorType(typeName).length === 0"
                                             class="text-green-600 hover:text-green-500 text-xs"
                                             @click="reconnectConfirmed(c)">
                                             <i class="fa-solid fa-refresh"></i>

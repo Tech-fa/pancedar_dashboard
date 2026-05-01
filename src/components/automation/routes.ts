@@ -7,6 +7,7 @@ import IncomingEmailReviewPage from "./IncomingEmailReviewPage.vue";
 import WorkflowRunsPage from "./WorkflowRunsPage.vue";
 import WorkflowRunsKanbanPage from "./WorkflowRunsKanbanPage.vue";
 import AgentCommunicationsPage from "./AgentCommunicationsPage.vue";
+import GoogleAccountsPage from "./GoogleAccountsPage.vue";
 
 export const automationRoutes = [
   {
@@ -20,6 +21,12 @@ export const automationRoutes = [
     name: "AutomationCosts",
     component: CostsPage,
     meta: { subject: "costs", actions: ["read"] },
+  },
+  {
+    path: "/resources/google-accounts",
+    name: "GoogleAccounts",
+    component: GoogleAccountsPage,
+    meta: { subject: "google_accounts", actions: ["read"] },
   },
   {
     path: "/automation/workflows",

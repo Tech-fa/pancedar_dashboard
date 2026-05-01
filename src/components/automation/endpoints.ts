@@ -51,6 +51,17 @@ export interface Connector {
   disconnectUrl?: string;
 }
 
+export interface KijiLink {
+  _id?: string;
+  connectorId: string;
+  sourceUrl: string;
+  link: string;
+  collectedAt?: string;
+  lastSeenAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface AddConnectionResponse {
   connectorId: string;
   connector: Connector;
@@ -191,6 +202,18 @@ export const getConnectors = (authStore: AuthStore) => {
 
 export const getConnectorTypes = (authStore: AuthStore) => {
   return apiGet<ConnectorTypeConfig[]>("/connectors/types", authStore);
+};
+
+export const getKijiLinks = (
+  connectorId: string,
+  authStore: AuthStore,
+  limit = 100,
+) => {
+  return apiGet<KijiLink[]>(
+    `/kijiji-link-tracking/${connectorId}/links`,
+    authStore,
+    { limit },
+  );
 };
 
 export const deleteConnector = (id: string, authStore: AuthStore) => {

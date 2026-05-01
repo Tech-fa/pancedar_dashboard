@@ -9,6 +9,7 @@ import ProfileView from "@/components/profile/Profile.vue";
 import { teamsRoutes } from "@/components/admin/teams/routes";
 import { automationRoutes } from "@/components/automation/routes";
 import { categoriesRoutes } from "@/components/automation/categories/routes";
+import { findingsRoutes } from "@/components/findings/routes";
 // Create a reactive loading state that can be imported in other components
 export const isRouteChanging = ref(false);
 
@@ -33,6 +34,7 @@ const router = createRouter({
         ...teamsRoutes,
         ...automationRoutes,
         ...categoriesRoutes,
+        ...findingsRoutes,
       ],
     },
 

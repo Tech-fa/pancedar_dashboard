@@ -405,7 +405,6 @@ const initStepValues = () => {
         stepValues.value[step.name] = initial
         stepActions.value[step.name] = normalizeAllowedActions(existing?.allowedActions, step)
     }
-    console.log(stepActions.value)
 }
 
 const addActionEntry = (stepName: string) => {

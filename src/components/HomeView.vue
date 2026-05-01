@@ -507,6 +507,12 @@ const navigations: {
                     path: '/resources/categories',
                     icon: h('i', { class: 'fa-solid fa-tags text-opposite ' }),
                     subject: 'email_workflow_categories'
+                },
+                {
+                    name: 'Google Accounts',
+                    path: '/resources/google-accounts',
+                    icon: h('i', { class: 'fa-brands fa-google text-opposite ' }),
+                    subject: 'google_accounts'
                 }
             ]
         },
@@ -535,6 +541,19 @@ const navigations: {
                 },
 
 
+            ]
+        },
+        {
+            name: 'Findings',
+            path: '/findings',
+            icon: h('i', { class: 'fa-solid fa-magnifying-glass text-opposite ' }),
+            menuItems: [
+                {
+                    name: 'Kiji Links',
+                    path: '/findings/kiji-links',
+                    icon: h('i', { class: 'fa-solid fa-link text-opposite ' }),
+                    subject: 'kijiji_links'
+                }
             ]
         },
 
