@@ -50,6 +50,13 @@
                 </div>
 
                 <div
+                    v-else-if="!selectedConnectorId"
+                    class="text-center py-12 text-opposite/50 bg-main rounded-lg border border-gray-800"
+                >
+                    Select a connector to view tracked Kijiji links.
+                </div>
+
+                <div
                     v-else-if="links.length === 0"
                     class="text-center py-12 text-opposite/50 bg-main rounded-lg border border-gray-800"
                 >
@@ -147,9 +154,12 @@ const setSelectedConnectorFromRoute = () => {
         return
     }
 
-    if (!selectedConnectorId.value && displayConnectors.value.length > 0) {
+    if (displayConnectors.value.length === 1) {
         selectedConnectorId.value = displayConnectors.value[0].id
+        return
     }
+
+    selectedConnectorId.value = ''
 }
 
 const fetchLinks = async () => {
