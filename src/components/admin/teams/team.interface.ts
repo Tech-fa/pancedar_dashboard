@@ -16,3 +16,11 @@ export interface TeamMember {
   groupIds: number[];
   createdAt: number;
 }
+
+export interface TeamConfig {
+  id?: string;
+  teamId: string;
+  config: { [key: string]: any };
+  createdAt: number;
+  updatedAt: number;
+}
