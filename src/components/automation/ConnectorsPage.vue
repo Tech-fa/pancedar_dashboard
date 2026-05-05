@@ -154,7 +154,7 @@ const credentialFieldErrors = reactive<Record<string, string>>({})
 const savingCredentialsId = ref<string | null>(null)
 let oauthPopup: Window | null = null
 
-const WF_FIELD_TYPES: WorkflowFieldType[] = ['boolean', 'text', 'number', 'select', 'files']
+const WF_FIELD_TYPES: WorkflowFieldType[] = ['boolean', 'text', 'color', 'number', 'select', 'files', 'textarea']
 
 const typeConfigByName = (typeName: string) =>
     connectorTypes.value.find(t => t.name === typeName)

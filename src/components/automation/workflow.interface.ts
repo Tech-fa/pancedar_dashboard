@@ -37,6 +37,7 @@ export interface WorkflowAllowedActions {
 export type WorkflowFieldType =
   | "boolean"
   | "text"
+  | "color"
   | "number"
   | "select"
   | "files"

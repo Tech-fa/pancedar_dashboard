@@ -15,6 +15,7 @@
 
         <AppInput v-else-if="field.type === 'text'" type="text" :hideIcon="true"
             :placeholder="field.placeholder || field.label" v-model="model" />
+        <AppInput v-else-if="field.type === 'color'" type="color" :hideIcon="true" v-model="model" />
         <AppTextarea v-else-if="field.type === 'textarea'" :hideIcon="true"
             :placeholder="field.placeholder || field.label" v-model="model" />
         <AppInput v-else-if="field.type === 'number'" type="number" :hideIcon="true"
