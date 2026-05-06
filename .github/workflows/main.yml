@@ -28,7 +28,7 @@ jobs:
     - name: Build react app
       run: |
         npm install
-        CI=false VITE_API_URL=https://pancedar-api.tech-fa.ca npm run build
+        CI=false VITE_API_URL=https://pancedar-api.tech-fa.ca VITE_CHAT_WIDGET_TEMPLATE_HOST=https://pancedar.tech-fa.ca npm run build
     - name: Push to s3
       env:
         S3_BUCKET: ${{ secrets.S3_BUCKET }}

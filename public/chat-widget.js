@@ -2,7 +2,7 @@
     const WIDGET_ID = 'tech-fa-chat-widget'
     const TOGGLE_ID = 'tech-fa-chat-toggle'
     const BOX_ID = 'tech-fa-chat-box'
-    const TEMPLATE_URL = '/chat-widget.template.html'
+    const TEMPLATE_URL = `${import.meta.env.VITE_CHAT_WIDGET_TEMPLATE_HOST}/chat-widget.template.html`
 
     function createStyles() {
         if (document.getElementById(WIDGET_ID + '-styles')) {
