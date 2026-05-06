@@ -309,13 +309,7 @@ async function fetchTeamConfig() {
 }
 
 async function handleSaveConfig() {
-    const missingField = secretFields.value.find(
-        (field) => !secretValues.value[field.path]?.trim()
-    )
-    if (missingField) {
-        toast.showToast('Error', `Please enter ${missingField.label}.`, 'error')
-        return
-    }
+ 
 
     savingConfig.value = true
     try {
