@@ -2,7 +2,8 @@
     const WIDGET_ID = 'tech-fa-chat-widget'
     const TOGGLE_ID = 'tech-fa-chat-toggle'
     const BOX_ID = 'tech-fa-chat-box'
-    const TEMPLATE_URL = `${import.meta.env.VITE_CHAT_WIDGET_TEMPLATE_HOST}/chat-widget.template.html`
+    // Replaced at dev/build time by vite `chat-widget-env-inject` (public/ is not processed by Vite).
+    const TEMPLATE_URL = `__VITE_CHAT_WIDGET_TEMPLATE_HOST__/chat-widget.template.html`
 
     function createStyles() {
         if (document.getElementById(WIDGET_ID + '-styles')) {
@@ -386,7 +387,7 @@
     async function loadWidgetTheme(appName) {
         try {
             const requestUrl = new URL(
-                `${process.env.VITE_API_URL}/connector/chat-widget/init`,
+                `__VITE_API_URL__/connector/chat-widget/init`,
                 window.location.origin
             )
             const response = await fetch(requestUrl.toString(), {
@@ -512,7 +513,7 @@
             setApiStatus(root, 'loading')
             setComposerEnabled(root, false)
             const requestUrl = new URL(
-                `${process.env.VITE_API_URL}/connector/chat-widget/register`,
+                `__VITE_API_URL__/connector/chat-widget/register`,
                 window.location.origin
             )
             const timestamp = Date.now().toString()
