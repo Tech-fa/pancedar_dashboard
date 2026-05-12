@@ -7,6 +7,15 @@
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-medium text-opposite">Workflows</h3>
                     <div class="flex items-center gap-2">
+                        <Can :subject="'workflows'" :actions="['deploy']">
+                            <AppButton buttonStyle="void"
+                                class="text-green-500 hover:text-green-400 bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 hover:border-green-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                :loading="deployingLightsails" :warnBefore="'Deploy all Lightsails?'"
+                                @click="deployLightsailsConfirmed">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>Deploy Lightsails</span>
+                            </AppButton>
+                        </Can>
                         <AppButton buttonStyle="primary" @click="goToNewWorkflow">
                             Add Workflow
                         </AppButton>
@@ -97,6 +106,7 @@ import { capitalizeFirstLetter, formatDate } from '@/util/util'
 import {
     getWorkflows,
     deleteWorkflow,
+    deployLightsails,
 } from '@/components/automation/endpoints'
 import type { Workflow } from '@/components/automation/workflow.interface'
 import Can from '../Can.vue'
@@ -112,6 +122,7 @@ const toast = useToast()
 
 const workflows = ref<Workflow[]>([])
 const loadingWorkflows = ref(false)
+const deployingLightsails = ref(false)
 
 function goToNewWorkflow() {
     router.push('/automation/workflows/new')
@@ -140,6 +151,18 @@ const deleteWorkflowConfirmed = async (wf: Workflow) => {
         loadAllWorkflows()
     } catch {
         toast.showToast('Error', 'Failed to delete workflow', 'error')
+    }
+}
+
+const deployLightsailsConfirmed = async () => {
+    deployingLightsails.value = true
+    try {
+        await deployLightsails(authStore)
+        toast.showToast('Deployed', 'Lightsails deployed successfully', 'success')
+    } catch (error: any) {
+        toast.showToast('Error', error?.response?.data?.message || 'Failed to deploy Lightsails', 'error')
+    } finally {
+        deployingLightsails.value = false
     }
 }
 

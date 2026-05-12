@@ -148,6 +148,10 @@ export const updateWorkflow = (
   return apiPut<Workflow>(`/workflows/${id}`, data, authStore);
 };
 
+export const deployLightsails = (authStore: AuthStore) => {
+  return apiPost<unknown>("/workflows/deploy-all-scrapers", {}, authStore);
+};
+
 export const reconnectConnector = (id: string, authStore: AuthStore) => {
   return apiPut<{ oauthUrl?: string }>(
     `/connectors/reconnect/${id}`,
