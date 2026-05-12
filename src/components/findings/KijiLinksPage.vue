@@ -151,7 +151,7 @@ const fetchLinks = async () => {
 const loadWorkflows = async () => {
     loadingConnectors.value = true
     try {
-        workflows.value = await getWorkflows(authStore, { workflowType: 'kijiji-notifier' })
+        workflows.value = await getWorkflows(authStore)
         setSelectedWorkflowFromRoute()
         await fetchLinks()
     } catch {
