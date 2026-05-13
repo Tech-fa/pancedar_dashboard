@@ -87,6 +87,11 @@ import type {
     WorkflowFieldConfig,
     WorkflowStep,
 } from '@/components/automation/workflow.interface'
+import {
+    defaultValueForWorkflowField,
+    fieldKey,
+    isRequiredWorkflowFieldMissing,
+} from '@/components/automation/workflowFieldHelpers'
 
 const crumbs = [
     { name: 'Automation', path: '/automation/workflows', icon: 'fa-solid fa-robot text-neutral-700 text-2xl' },
@@ -107,25 +112,13 @@ const isSaving = ref(false)
 // Keyed by step name, then by field key (name ?? label) -> value
 const stepValues = ref<Record<string, Record<string, any>>>({})
 
-const fieldKey = (field: WorkflowFieldConfig) => field.name || field.label
-
-const defaultValueFor = (field: WorkflowFieldConfig) => {
-    switch (field.type) {
-        case 'boolean': return false
-        case 'number': return null
-        case 'select': return null
-        case 'files': return null
-        default: return ''
-    }
-}
-
 const onTypeSelected = (type: AvailableWorkflow | null) => {
     stepValues.value = {}
     if (!type) return
     for (const step of type.steps || []) {
         const initial: Record<string, any> = {}
         for (const field of step.fields || []) {
-            initial[fieldKey(field)] = defaultValueFor(field)
+            initial[fieldKey(field)] = defaultValueForWorkflowField(field)
         }
         stepValues.value[step.name] = initial
     }
@@ -181,14 +174,8 @@ const validateRequired = (): string | null => {
     if (!name.value.trim()) return 'Name is required'
     for (const step of selectedType.value.steps || []) {
         for (const field of step.fields || []) {
-            if (!field.required) continue
             const value = stepValues.value[step.name]?.[fieldKey(field)]
-            const missing =
-                value === undefined ||
-                value === null ||
-                value === '' ||
-                (field.type === 'boolean' && value === undefined)
-            if (missing) {
+            if (isRequiredWorkflowFieldMissing(field, value)) {
                 return `"${field.label}" is required in step "${step.name}"`
             }
         }

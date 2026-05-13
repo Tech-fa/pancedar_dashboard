@@ -196,6 +196,11 @@ import type {
     WorkflowStep,
     WorkflowStepConfig,
 } from '@/components/automation/workflow.interface'
+import {
+    defaultValueForWorkflowField,
+    fieldKey,
+    isRequiredWorkflowFieldMissing,
+} from '@/components/automation/workflowFieldHelpers'
 import { capitalizeFirstLetter } from '@/util/util'
 import MultiSelect from '../MultiSelect.vue'
 
@@ -228,8 +233,6 @@ const stepActions = ref<Record<string, WorkflowStepActionEntry[]>>({})
 const typeConfig = computed<AvailableWorkflow | undefined>(() =>
     availableTypes.value.find((t) => t.name === workflow.value?.workflowType),
 )
-
-const fieldKey = (field: WorkflowFieldConfig) => field.name || field.label
 
 const actionName = (action: WorkflowActionConfig | string) =>
     typeof action === 'string' ? action : action.name
@@ -368,16 +371,6 @@ const onConnectorMultiSelect = (typeName: string, selectedConnectors: Connector[
     ]
 }
 
-const defaultValueFor = (field: WorkflowFieldConfig) => {
-    switch (field.type) {
-        case 'boolean': return false
-        case 'number': return null
-        case 'select': return null
-        case 'files': return null
-        default: return ''
-    }
-}
-
 const setFieldValue = (
     stepName: string,
     field: WorkflowFieldConfig,
@@ -425,7 +418,7 @@ const initStepValues = () => {
         const existingValues = existing?.values || {}
         for (const field of step.fields || []) {
             const key = fieldKey(field)
-            initial[key] = key in existingValues ? existingValues[key] : defaultValueFor(field)
+            initial[key] = key in existingValues ? existingValues[key] : defaultValueForWorkflowField(field)
         }
         stepValues.value[step.name] = initial
         stepActions.value[step.name] = normalizeAllowedActions(existing?.allowedActions, step)
@@ -552,14 +545,8 @@ const validateRequired = (): string | null => {
             }
         }
         for (const field of step.fields || []) {
-            if (!field.required) continue
             const value = stepValues.value[step.name]?.[fieldKey(field)]
-            const missing =
-                value === undefined ||
-                value === null ||
-                value === '' ||
-                (field.type === 'boolean' && value === undefined)
-            if (missing) {
+            if (isRequiredWorkflowFieldMissing(field, value)) {
                 return `"${field.label}" is required in step "${step.name}"`
             }
         }

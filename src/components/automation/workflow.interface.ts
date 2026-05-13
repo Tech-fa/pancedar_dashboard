@@ -41,7 +41,18 @@ export type WorkflowFieldType =
   | "number"
   | "select"
   | "files"
-  | "textarea";
+  | "textarea"
+  | "array"
+  | "json"
+  /** Backend step configs (e.g. register-car) use `string` for nested keys; normalized to `text` in the UI. */
+  | "string";
+
+/** Shape of each entry in an `array` field (e.g. cars, locations). */
+export interface WorkflowArrayItemsJson {
+  type: "json";
+  fields: WorkflowFieldConfig[];
+}
+
 export interface WorkflowFieldConfig {
   label: string;
   name?: string;
@@ -50,6 +61,10 @@ export interface WorkflowFieldConfig {
   options?: string[];
   placeholder?: string;
   accept?: string;
+  /** For `type: "array"`: schema for each row (typically `json` with `fields` as object keys). */
+  items?: WorkflowArrayItemsJson;
+  /** For `type: "json"`: sub-fields map to keyed properties on the object value. */
+  fields?: WorkflowFieldConfig[];
 }
 
 export interface WorkflowStepConfig {
