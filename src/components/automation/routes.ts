@@ -7,6 +7,7 @@ import IncomingEmailReviewPage from "./IncomingEmailReviewPage.vue";
 import WorkflowRunsPage from "./WorkflowRunsPage.vue";
 import WorkflowRunsKanbanPage from "./WorkflowRunsKanbanPage.vue";
 import AgentCommunicationsPage from "./AgentCommunicationsPage.vue";
+import WorkflowRunFlaggedPagesPage from "./WorkflowRunFlaggedPagesPage.vue";
 import GoogleAccountsPage from "./GoogleAccountsPage.vue";
 
 export const automationRoutes = [
@@ -68,6 +69,12 @@ export const automationRoutes = [
     path: "/automation/workflow-runs/:runId/communications",
     name: "AutomationWorkflowRunCommunications",
     component: AgentCommunicationsPage,
+    meta: { subject: "workflows", actions: ["read"] },
+  },
+  {
+    path: "/automation/workflow-runs/:runId/flagged-pages",
+    name: "AutomationWorkflowRunFlaggedPages",
+    component: WorkflowRunFlaggedPagesPage,
     meta: { subject: "workflows", actions: ["read"] },
   },
   {

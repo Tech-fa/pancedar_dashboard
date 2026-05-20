@@ -4,6 +4,7 @@ const relatedViewRouteMap: Record<string, (id: string) => string> = {
   incoming_emails: (id: string) => `/automation/incoming-emails/${id}`,
   agent_communications: (id: string) =>
     `/automation/workflow-runs/${id}/communications`,
+  flagged_pages: (id: string) => `/automation/workflow-runs/${id}/flagged-pages`,
 };
 type RelatedView = {
   subject?: string;
@@ -47,9 +48,6 @@ export const getAwaitingActionRoute = (run: WorkflowRun): string | null => {
 };
 
 export const getCompletedRoute = (run: WorkflowRun): string | null => {
-  if (run.status !== "completed") {
-    return null;
-  }
   if (!run.completedView?.subject || !run.completedView.id) {
     return null;
   }

@@ -133,6 +133,58 @@ export const getWorkflowRunCommunications = (
   );
 };
 
+/** Rows from `google_flagged_pages` (keyword hits from Google Business scrape runs). */
+export interface GoogleFlaggedPage {
+  id: string;
+  teamId: string | null;
+  workflowRunId: string | null;
+  googleRootWebsiteId: string | null;
+  googleMapsSearchUrl: string | null;
+  websiteUrl: string;
+  pageUrl: string;
+  matchedKeywords: string[];
+  textSnippet: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Contact rollup per scraped site root, from `google_root_websites`. */
+export interface GoogleRootWebsiteSummary {
+  id: string;
+  websiteUrl: string;
+  googleMapsSearchUrl: string | null;
+  phones: string[];
+  emails: string[];
+  linkedinUrl: string | null;
+  linkedinContactProfileUrl: string | null;
+  linkedinOutreachSummary: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+/** Flagged keyword hits grouped under their site root (API resolves roots then pages). */
+export interface GoogleFlaggedPagesGroup {
+  websiteUrl: string;
+  googleMapsSearchUrl: string | null;
+  linkedinUrl: string | null;
+  linkedinContactProfileUrl: string | null;
+  linkedinOutreachSummary: string | null;
+  phones: string[];
+  emails: string[];
+  pages: GoogleFlaggedPage[];
+}
+
+export const getGoogleFlaggedPages = (
+  authStore: AuthStore,
+  params: { workflowRunId?: string; limit?: number } = {},
+) => {
+  return apiGet<GoogleFlaggedPagesGroup[]>(
+    "/google-business-scraper/flagged-pages",
+    authStore,
+    params,
+  );
+};
+
 export const createWorkflow = (
   data: CreateWorkflowPayload,
   authStore: AuthStore,
@@ -150,6 +202,19 @@ export const updateWorkflow = (
 
 export const deployLightsails = (authStore: AuthStore) => {
   return apiPost<unknown>("/workflows/deploy-all-scrapers", {}, authStore);
+};
+
+/** Trigger Google Business scraper for a workflow (Maps URL + keywords come from workflow steps). */
+export const triggerWorkflow = (
+  workflowId: string,
+  actionUrl: string,
+  authStore: AuthStore,
+) => {
+  return apiPost<{
+    workflowRunId: string;
+    enqueued: number;
+    websiteUrls: string[];
+  }>(actionUrl, { workflowId }, authStore);
 };
 
 export const reconnectConnector = (id: string, authStore: AuthStore) => {

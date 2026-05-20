@@ -53,6 +53,16 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap justify-end shrink-0">
+                            <Can :subject="'workflows'" :actions="['create']">
+                                <AppButton v-if="wf.actionUrl" buttonStyle="void"
+                                    class="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                    :loading="triggeringWorkflowId === wf.id"
+                                    :warnBefore="'Run Workflow now? This will trigger the workflow and cannot be undone.'"
+                                    @click="triggerWorkflowConfirmed(wf)">
+                                    <i class="fa-solid fa-play"></i>
+                                    <span>Run Workflow</span>
+                                </AppButton>
+                            </Can>
                             <Can :subject="'workflows'" :actions="['read']">
                                 <div class="flex items-center gap-2">
                                     <AppButton buttonStyle="void"
@@ -107,6 +117,7 @@ import {
     getWorkflows,
     deleteWorkflow,
     deployLightsails,
+    triggerWorkflow,
 } from '@/components/automation/endpoints'
 import type { Workflow } from '@/components/automation/workflow.interface'
 import Can from '../Can.vue'
@@ -123,6 +134,7 @@ const toast = useToast()
 const workflows = ref<Workflow[]>([])
 const loadingWorkflows = ref(false)
 const deployingLightsails = ref(false)
+const triggeringWorkflowId = ref<string | null>(null)
 
 function goToNewWorkflow() {
     router.push('/automation/workflows/new')
@@ -151,6 +163,28 @@ const deleteWorkflowConfirmed = async (wf: Workflow) => {
         loadAllWorkflows()
     } catch {
         toast.showToast('Error', 'Failed to delete workflow', 'error')
+    }
+}
+
+const triggerWorkflowConfirmed = async (wf: Workflow) => {
+    if (!wf.actionUrl) return
+    triggeringWorkflowId.value = wf.id
+    try {
+        const result = await triggerWorkflow(wf.id, wf.actionUrl, authStore)
+        toast.showToast(
+            'Workflow started',
+            `Started workflow ${wf.name}`,
+            'success',
+        )
+        loadAllWorkflows()
+    } catch (error: any) {
+        toast.showToast(
+            'Error',
+            error?.response?.data?.message || 'Failed to start scrape',
+            'error',
+        )
+    } finally {
+        triggeringWorkflowId.value = null
     }
 }
 

@@ -12,6 +12,8 @@ export interface Workflow {
   teamId: string;
   createdAt: number;
   updatedAt: number;
+  /** From workflow type config — POST `{ workflowId }` to trigger (when supported). */
+  actionUrl?: string | null;
 }
 
 export interface WorkflowConnectorSummary {
@@ -87,6 +89,8 @@ export interface AvailableWorkflow {
   description: string;
   connectorsNeeded?: string[];
   allowMultiple?: boolean;
+  /** When set, dashboard may POST to this API path to run the workflow (e.g. Google Business scraper). */
+  actionUrl?: string | null;
   steps: WorkflowStepConfig[];
 }
 

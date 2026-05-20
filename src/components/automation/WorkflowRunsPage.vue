@@ -65,8 +65,8 @@
                             <div class="text-opposite/70" v-if="run.displayContext">
                                 <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
                                     :key="key">
-                                    <span class="text-opposite/50">{{ key }}:</span> {{
-                                        formatIfTimestamp(run.displayContext[key]) }}
+                                    <span class="text-opposite/50">{{ key }}:</span> <span class="break-all">{{
+                                        formatIfTimestamp(run.displayContext[key]) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -89,7 +89,7 @@
                                 Manually Approve
                             </a>
                         </div>
-                        <div v-if="run.status === 'completed' && getCompletedRoute(run)" class="pt-1"> <a
+                        <div v-if="getCompletedRoute(run)" class="pt-1"> <a
                                 class="text-blue-400 hover:text-blue-300 text-sm p-0 cursor-pointer"
                                 :href="(getCompletedRoute(run) as string)" target="_blank">
                                 <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>

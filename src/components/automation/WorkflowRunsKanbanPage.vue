@@ -35,9 +35,10 @@
                                 >
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
                                 <div class="text-opposite/70" v-if="run.displayContext">
-                                    <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
+                                    <div class="flex items-start gap-2 " v-for="key in Object.keys(run.displayContext)"
                                         :key="key">
-                                        <span class="text-opposite/50">{{ key }}:</span> {{ run.displayContext[key] }}
+                                        <span class="text-opposite/50">{{ key }}:</span> <span class="break-all">{{
+                                            run.displayContext[key] }}</span>
                                     </div>
                                 </div>
                                 <div class="text-opposite/60">Step: {{ run.currentStep || '-' }}</div>
@@ -62,9 +63,10 @@
                                 class="bg-secondary rounded border border-gray-800 p-3 text-sm space-y-2">
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
                                 <div class="text-opposite/70" v-if="run.displayContext">
-                                    <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
+                                    <div class="flex items-start gap-2 " v-for="key in Object.keys(run.displayContext)"
                                         :key="key">
-                                        <span class="text-opposite/50">{{ key }}:</span> {{ run.displayContext[key] }}
+                                        <span class="text-opposite/50">{{ key }}:</span> <span class="break-all">{{
+                                            run.displayContext[key] }}</span>
                                     </div>
                                 </div>
                                 <div class="text-opposite/60">Status: {{ run.status }}</div>
@@ -90,9 +92,10 @@
                                 class="bg-secondary rounded border border-gray-800 p-3 text-sm space-y-2">
                                 <div class="text-opposite/80 break-all">{{ run.workflow?.name }}</div>
                                 <div class="text-opposite/70" v-if="run.displayContext">
-                                    <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
+                                    <div class="flex items-start gap-2 " v-for="key in Object.keys(run.displayContext)"
                                         :key="key">
-                                        <span class="text-opposite/50">{{ key }}:</span> {{ run.displayContext[key] }}
+                                        <span class="text-opposite/50">{{ key }}:</span> <span class="break-all">{{
+                                            run.displayContext[key] }}</span>
                                     </div>
                                 </div>
                                 <div class="text-opposite/60">Status: {{ run.status }}</div>
