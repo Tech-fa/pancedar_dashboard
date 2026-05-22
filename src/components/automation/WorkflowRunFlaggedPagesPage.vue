@@ -27,36 +27,58 @@
                 </div>
 
                 <div v-else class="space-y-4">
-                    <div v-if="allKeywords.length > 0"
+                    <div v-if="allKeywords.length > 0 || groupsWithOutreachCount > 0 || groupsWithLinkedinCompanyCount > 0"
                         class="bg-main rounded-lg border border-gray-800 p-4 space-y-3">
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                             <div class="text-xs uppercase text-opposite/50 tracking-wide">
-                                Filter by keyword
-                                <span v-if="selectedKeywords.length > 0" class="normal-case text-opposite/70">
+                                Filters
+                                <span v-if="hasActiveFilters" class="normal-case text-opposite/70">
                                     ({{ filteredPageCount }} of {{ totalPageCount }})
                                 </span>
                             </div>
-                            <button v-if="selectedKeywords.length > 0" type="button"
+                            <button v-if="hasActiveFilters" type="button"
                                 class="text-xs text-blue-400 hover:text-blue-300 shrink-0"
-                                @click="clearKeywordFilter">
-                                Clear filter
+                                @click="clearFilters">
+                                Clear filters
                             </button>
                         </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button v-for="kw in allKeywords" :key="kw" type="button"
+                        <div v-if="groupsWithOutreachCount > 0 || groupsWithLinkedinCompanyCount > 0"
+                            class="flex flex-wrap gap-2">
+                            <button v-if="groupsWithLinkedinCompanyCount > 0" type="button"
                                 class="text-xs px-2 py-1 rounded border transition-colors"
-                                :class="isKeywordSelected(kw)
-                                    ? 'border-amber-600 text-amber-800 bg-amber-500/25'
+                                :class="onlyWithLinkedinCompany
+                                    ? 'border-sky-600 text-sky-800 bg-sky-500/25'
                                     : 'border-gray-700 text-opposite/70 bg-secondary hover:border-gray-600'"
-                                @click="toggleKeyword(kw)">
-                                {{ kw }}
+                                @click="onlyWithLinkedinCompany = !onlyWithLinkedinCompany">
+                                Has LinkedIn company ({{ groupsWithLinkedinCompanyCount }})
                             </button>
+                            <button v-if="groupsWithOutreachCount > 0" type="button"
+                                class="text-xs px-2 py-1 rounded border transition-colors"
+                                :class="onlyWithLinkedinOutreachSummary
+                                    ? 'border-sky-600 text-sky-800 bg-sky-500/25'
+                                    : 'border-gray-700 text-opposite/70 bg-secondary hover:border-gray-600'"
+                                @click="onlyWithLinkedinOutreachSummary = !onlyWithLinkedinOutreachSummary">
+                                Has outreach message ({{ groupsWithOutreachCount }})
+                            </button>
+                        </div>
+                        <div v-if="allKeywords.length > 0" class="space-y-2">
+                            <div class="text-xs uppercase text-opposite/50 tracking-wide">Keywords</div>
+                            <div class="flex flex-wrap gap-2">
+                                <button v-for="kw in allKeywords" :key="kw" type="button"
+                                    class="text-xs px-2 py-1 rounded border transition-colors"
+                                    :class="isKeywordSelected(kw)
+                                        ? 'border-amber-600 text-amber-800 bg-amber-500/25'
+                                        : 'border-gray-700 text-opposite/70 bg-secondary hover:border-gray-600'"
+                                    @click="toggleKeyword(kw)">
+                                    {{ kw }}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <div v-if="filteredPageCount === 0"
                         class="text-center py-12 text-opposite/50 bg-main rounded-lg border border-gray-800">
-                        No flagged pages match the selected keywords.
+                        No flagged pages match the selected filters.
                     </div>
 
                     <div v-for="(group, gIdx) in filteredGroups"
@@ -223,6 +245,8 @@ const runId = computed(() => route.params.runId as string)
 const loading = ref(false)
 const groups = ref<GoogleFlaggedPagesGroup[]>([])
 const selectedKeywords = ref<string[]>([])
+const onlyWithLinkedinOutreachSummary = ref(false)
+const onlyWithLinkedinCompany = ref(false)
 /** Group keys (see `pagesUnderRootKey`) with collapsed page lists; omitted keys are expanded. */
 const collapsedPagesUnderRootKeys = ref<Set<string>>(new Set())
 
@@ -261,19 +285,44 @@ const allKeywords = computed(() => {
     return [...keywords].sort((a, b) => a.localeCompare(b))
 })
 
+const groupsWithOutreachCount = computed(() =>
+    groups.value.filter((g) => !!g.linkedinOutreachSummary).length,
+)
+
+const groupsWithLinkedinCompanyCount = computed(() =>
+    groups.value.filter((g) => !!g.linkedinUrl).length,
+)
+
+const hasActiveFilters = computed(() =>
+    selectedKeywords.value.length > 0
+    || onlyWithLinkedinOutreachSummary.value
+    || onlyWithLinkedinCompany.value,
+)
+
 const filteredGroups = computed((): GoogleFlaggedPagesGroup[] => {
-    if (selectedKeywords.value.length === 0) {
-        return groups.value
+    let result = groups.value
+
+    if (onlyWithLinkedinCompany.value) {
+        result = result.filter((g) => !!g.linkedinUrl)
     }
-    const selected = new Set(selectedKeywords.value)
-    return groups.value
-        .map((group) => ({
-            ...group,
-            pages: group.pages.filter((page) =>
-                page.matchedKeywords.some((kw) => selected.has(kw)),
-            ),
-        }))
-        .filter((g) => g.pages.length > 0)
+
+    if (onlyWithLinkedinOutreachSummary.value) {
+        result = result.filter((g) => !!g.linkedinOutreachSummary)
+    }
+
+    if (selectedKeywords.value.length > 0) {
+        const selected = new Set(selectedKeywords.value)
+        result = result
+            .map((group) => ({
+                ...group,
+                pages: group.pages.filter((page) =>
+                    page.matchedKeywords.some((kw) => selected.has(kw)),
+                ),
+            }))
+            .filter((g) => g.pages.length > 0)
+    }
+
+    return result
 })
 
 const filteredPageCount = computed(() =>
@@ -297,13 +346,17 @@ const toggleKeyword = (keyword: string) => {
     }
 }
 
-const clearKeywordFilter = () => {
+const clearFilters = () => {
     selectedKeywords.value = []
+    onlyWithLinkedinOutreachSummary.value = false
+    onlyWithLinkedinCompany.value = false
 }
 
 const load = async () => {
     loading.value = true
     selectedKeywords.value = []
+    onlyWithLinkedinOutreachSummary.value = false
+    onlyWithLinkedinCompany.value = false
     collapsedPagesUnderRootKeys.value = new Set()
     try {
         groups.value = await getGoogleFlaggedPages(authStore, {

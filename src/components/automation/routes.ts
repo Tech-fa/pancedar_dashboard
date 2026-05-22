@@ -8,6 +8,7 @@ import WorkflowRunsPage from "./WorkflowRunsPage.vue";
 import WorkflowRunsKanbanPage from "./WorkflowRunsKanbanPage.vue";
 import AgentCommunicationsPage from "./AgentCommunicationsPage.vue";
 import WorkflowRunFlaggedPagesPage from "./WorkflowRunFlaggedPagesPage.vue";
+import WorkflowRunLinkedInLeadsPage from "./WorkflowRunLinkedInLeadsPage.vue";
 import GoogleAccountsPage from "./GoogleAccountsPage.vue";
 
 export const automationRoutes = [
@@ -75,6 +76,12 @@ export const automationRoutes = [
     path: "/automation/workflow-runs/:runId/flagged-pages",
     name: "AutomationWorkflowRunFlaggedPages",
     component: WorkflowRunFlaggedPagesPage,
+    meta: { subject: "workflows", actions: ["read"] },
+  },
+  {
+    path: "/automation/workflow-runs/:runId/linkedin-leads",
+    name: "AutomationWorkflowRunLinkedInLeads",
+    component: WorkflowRunLinkedInLeadsPage,
     meta: { subject: "workflows", actions: ["read"] },
   },
   {

@@ -185,6 +185,32 @@ export const getGoogleFlaggedPages = (
   );
 };
 
+/** Rows from `linkedin_leads` (profiles from LinkedIn search outreach runs). */
+export interface LinkedInLead {
+  id: string;
+  workflowRunId: string;
+  searchUrl: string;
+  profileUrl: string;
+  name: string | null;
+  position: string | null;
+  outreachSummary: string | null;
+  status: "pending" | "completed" | "failed" | "skipped";
+  skipReason: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export const getLinkedInLeads = (
+  authStore: AuthStore,
+  params: { workflowRunId?: string; limit?: number } = {},
+) => {
+  return apiGet<LinkedInLead[]>(
+    "/linkedin-search-outreach/leads",
+    authStore,
+    params,
+  );
+};
+
 export const createWorkflow = (
   data: CreateWorkflowPayload,
   authStore: AuthStore,

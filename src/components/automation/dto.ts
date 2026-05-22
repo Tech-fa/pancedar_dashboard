@@ -5,6 +5,7 @@ const relatedViewRouteMap: Record<string, (id: string) => string> = {
   agent_communications: (id: string) =>
     `/automation/workflow-runs/${id}/communications`,
   flagged_pages: (id: string) => `/automation/workflow-runs/${id}/flagged-pages`,
+  linkedin_leads: (id: string) => `/automation/workflow-runs/${id}/linkedin-leads`,
 };
 type RelatedView = {
   subject?: string;
