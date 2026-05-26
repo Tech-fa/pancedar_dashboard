@@ -39,8 +39,26 @@
 
                 <div v-else class="space-y-3">
                     <WorkflowCard v-for="wf in workflows" :key="wf.id" :workflow="wf">
+                        <Can :subject="'workflows'" :actions="['update']">
+                            <AppButton v-if="!wf.isStopped && wf.lightSailInstanceId" buttonStyle="void"
+                                class="text-orange-500 hover:text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 hover:border-orange-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                :loading="stoppingWorkflowId === wf.id"
+                                :warnBefore="`Stop workflow &quot;${wf.name}&quot;? This will tear down its Lightsail instance.`"
+                                @click="stopWorkflowConfirmed(wf)">
+                                <i class="fa-solid fa-stop"></i>
+                                <span>Stop</span>
+                            </AppButton>
+                            <AppButton v-else-if="wf.isStopped" buttonStyle="void"
+                                class="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                :loading="startingWorkflowId === wf.id"
+                                :warnBefore="`Start workflow &quot;${wf.name}&quot;? This will recreate its Lightsail instance if needed.`"
+                                @click="startWorkflowConfirmed(wf)">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Start</span>
+                            </AppButton>
+                        </Can>
                         <Can :subject="'workflows'" :actions="['create']">
-                            <AppButton v-if="wf.actionUrl" buttonStyle="void"
+                            <AppButton v-if="wf.actionUrl && !wf.isStopped" buttonStyle="void"
                                 class="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
                                 :loading="triggeringWorkflowId === wf.id"
                                 :warnBefore="wf.actionFields?.length ? undefined : 'Run Workflow now? This will trigger the workflow and cannot be undone.'"
@@ -99,6 +117,8 @@ import {
     getWorkflows,
     deleteWorkflow,
     deployLightsails,
+    stopWorkflow,
+    startWorkflow,
     triggerWorkflow,
 } from '@/components/automation/endpoints'
 import type { Workflow } from '@/components/automation/workflow.interface'
@@ -121,6 +141,8 @@ const workflows = ref<Workflow[]>([])
 const loadingWorkflows = ref(false)
 const deployingLightsails = ref(false)
 const triggeringWorkflowId = ref<string | null>(null)
+const stoppingWorkflowId = ref<string | null>(null)
+const startingWorkflowId = ref<string | null>(null)
 
 function goToNewWorkflow() {
     router.push('/automation/workflows/new')
@@ -191,6 +213,40 @@ const triggerWorkflowConfirmed = (wf: Workflow) => {
     }
 
     void runWorkflow(wf)
+}
+
+const stopWorkflowConfirmed = async (wf: Workflow) => {
+    stoppingWorkflowId.value = wf.id
+    try {
+        await stopWorkflow(wf.id, authStore)
+        toast.showToast('Stopped', `Stopped workflow ${wf.name}`, 'success')
+        loadAllWorkflows()
+    } catch (error: any) {
+        toast.showToast(
+            'Error',
+            error?.response?.data?.message || 'Failed to stop workflow',
+            'error',
+        )
+    } finally {
+        stoppingWorkflowId.value = null
+    }
+}
+
+const startWorkflowConfirmed = async (wf: Workflow) => {
+    startingWorkflowId.value = wf.id
+    try {
+        await startWorkflow(wf.id, authStore)
+        toast.showToast('Started', `Started workflow ${wf.name}`, 'success')
+        loadAllWorkflows()
+    } catch (error: any) {
+        toast.showToast(
+            'Error',
+            error?.response?.data?.message || 'Failed to start workflow',
+            'error',
+        )
+    } finally {
+        startingWorkflowId.value = null
+    }
 }
 
 const deployLightsailsConfirmed = async () => {

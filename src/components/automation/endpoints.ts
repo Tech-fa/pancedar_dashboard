@@ -230,6 +230,14 @@ export const deployLightsails = (authStore: AuthStore) => {
   return apiPost<unknown>("/workflows/deploy-all-scrapers", {}, authStore);
 };
 
+export const stopWorkflow = (id: string, authStore: AuthStore) => {
+  return apiPost<Workflow>(`/workflows/${id}/stop`, {}, authStore);
+};
+
+export const startWorkflow = (id: string, authStore: AuthStore) => {
+  return apiPost<Workflow>(`/workflows/${id}/start`, {}, authStore);
+};
+
 /** Trigger a workflow action endpoint (optional extra body from `actionFields`). */
 export const triggerWorkflow = (
   workflowId: string,

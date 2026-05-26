@@ -10,6 +10,8 @@ export interface Workflow {
   context?: Record<string, any> | null;
   clientId: string;
   teamId: string;
+  lightSailInstanceId?: string | null;
+  isStopped?: boolean;
   createdAt: number;
   updatedAt: number;
   /** From workflow type config — POST `{ workflowId }` to trigger (when supported). */
