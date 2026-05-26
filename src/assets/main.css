@@ -477,4 +477,245 @@ body {
 
 }
 
+/* Automation glow cards — muted variant inspired by gradient card UI */
+.automation-glow-card {
+  --agc-surface: hsl(240, 12%, 10%);
+  --agc-line: hsl(240, 8%, 20%);
+  --agc-muted: hsl(240, 4%, 58%);
+  --agc-text: hsl(0, 0%, 90%);
+  --agc-accent: hsl(258, 38%, 52%);
+  --agc-accent-soft: hsla(258, 35%, 42%, 0.22);
+
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: 1rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.automation-glow-card:hover {
+  transform: translateY(-1px);
+}
+
+.automation-glow-card__border {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.automation-glow-card__border::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160%;
+  height: 160%;
+  transform: translate(-50%, -50%);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    hsla(258, 30%, 38%, 0.12) 70deg,
+    hsla(258, 40%, 48%, 0.28) 130deg,
+    hsla(270, 25%, 40%, 0.14) 190deg,
+    transparent 260deg
+  );
+  animation: automation-glow-spin 12s linear infinite;
+}
+
+.automation-glow-card__border::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: calc(1rem - 1px);
+  background: var(--agc-surface);
+}
+
+.automation-glow-card__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: calc(1rem - 1px);
+  margin: 1px;
+  background-color: var(--agc-surface);
+  background-image:
+    radial-gradient(at 88% 40%, hsl(240, 12%, 10%) 0px, transparent 85%),
+    radial-gradient(at 0% 64%, var(--agc-accent-soft) 0px, transparent 85%),
+    radial-gradient(at 41% 94%, hsla(270, 22%, 32%, 0.12) 0px, transparent 85%);
+  box-shadow: inset 0 -12px 24px rgba(255, 255, 255, 0.035);
+}
+
+.automation-glow-card--static:hover {
+  transform: none;
+}
+
+.automation-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--agc-text);
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.automation-card-subtitle {
+  margin-top: 0.15rem;
+  font-size: 0.7rem;
+  color: var(--agc-muted);
+  word-break: break-all;
+}
+
+.automation-card-line {
+  width: 100%;
+  height: 1px;
+  border: none;
+  background-color: var(--agc-line);
+}
+
+.automation-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.automation-card-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--agc-text);
+}
+
+.automation-card-check {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  width: 0.95rem;
+  height: 0.95rem;
+  margin-top: 0.1rem;
+  border-radius: 9999px;
+  background-color: hsla(258, 32%, 46%, 0.55);
+}
+
+.automation-card-check svg {
+  width: 0.55rem;
+  height: 0.55rem;
+  fill: hsl(240, 12%, 10%);
+}
+
+.automation-card-meta {
+  font-size: 0.72rem;
+  color: var(--agc-muted);
+}
+
+.automation-card-meta-label {
+  color: hsl(240, 4%, 48%);
+}
+
+.automation-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.automation-status-badge--awaiting {
+  color: hsl(38, 70%, 72%);
+  background: hsla(38, 45%, 45%, 0.14);
+  border-color: hsla(38, 45%, 50%, 0.28);
+}
+
+.automation-status-badge--pending {
+  color: hsl(210, 55%, 72%);
+  background: hsla(210, 40%, 45%, 0.14);
+  border-color: hsla(210, 40%, 50%, 0.28);
+}
+
+.automation-status-badge--completed {
+  color: hsl(152, 40%, 68%);
+  background: hsla(152, 35%, 38%, 0.14);
+  border-color: hsla(152, 35%, 45%, 0.28);
+}
+
+.automation-status-badge--default {
+  color: var(--agc-muted);
+  background: hsla(240, 8%, 40%, 0.12);
+  border-color: hsla(240, 8%, 45%, 0.22);
+}
+
+.automation-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 9999px;
+  border: 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: hsl(0, 0%, 92%);
+  background-image: linear-gradient(
+    0deg,
+    hsla(258, 38%, 38%, 0.95) 0%,
+    hsla(270, 28%, 46%, 0.95) 100%
+  );
+  box-shadow: inset 0 -2px 16px -4px rgba(255, 255, 255, 0.18);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.automation-card-action:hover {
+  opacity: 0.92;
+}
+
+.automation-kanban-column {
+  min-height: 420px;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: hsl(240, 12%, 46%);
+  border: 1px solid hsl(240, 8%, 18%);
+}
+
+.automation-kanban-column__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid hsl(240, 8%, 18%);
+}
+
+.automation-kanban-column__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.automation-kanban-column__title--awaiting {
+  color: hsl(38, 55%, 68%);
+}
+
+.automation-kanban-column__title--pending {
+  color: hsl(210, 45%, 68%);
+}
+
+.automation-kanban-column__title--completed {
+  color: hsl(152, 35%, 62%);
+}
+
+@keyframes automation-glow-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
 

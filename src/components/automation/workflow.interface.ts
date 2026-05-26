@@ -14,6 +14,8 @@ export interface Workflow {
   updatedAt: number;
   /** From workflow type config — POST `{ workflowId }` to trigger (when supported). */
   actionUrl?: string | null;
+  /** Optional fields to collect when triggering via `actionUrl`. */
+  actionFields?: WorkflowFieldConfig[];
 }
 
 export interface WorkflowConnectorSummary {

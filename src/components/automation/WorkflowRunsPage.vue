@@ -40,63 +40,15 @@
                 </div>
 
                 <div v-else class="space-y-3">
+                    <WorkflowRunCard
+                        v-for="run in runs"
+                        :key="run.id"
+                        :run="run"
+                        mode="full"
+                        link-mode="none"
+                        show-status
+                    />
 
-
-                    <div v-for="run in runs" :key="run.id"
-                        class="bg-main rounded-lg border border-gray-800 p-4 space-y-3">
-                        <div class="flex items-center justify-between gap-4">
-
-                            <div class="text-xs uppercase tracking-wide px-2 py-1 rounded border"
-                                :class="statusClass(run.status)">
-                                {{ run.status }}
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                            <div class="text-opposite/70">
-                                <span class="text-opposite/50">Created:</span> {{ formatDate(run.createdAt) }}
-                            </div>
-                            <div class="text-opposite/70">
-                                <span class="text-opposite/50">Updated:</span> {{ formatDate(run.updatedAt) }}
-                            </div>
-                            <div class="text-opposite/70" v-if="run.currentStep && run.status !== 'completed'">
-                                <span class="text-opposite/50">Current Step:</span> {{ run.currentStep || '-' }}
-                            </div>
-                            <div class="text-opposite/70" v-if="run.displayContext">
-                                <div class="flex items-center gap-2" v-for="key in Object.keys(run.displayContext)"
-                                    :key="key">
-                                    <span class="text-opposite/50">{{ key }}:</span> <span class="break-all">{{
-                                        formatIfTimestamp(run.displayContext[key]) }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="" v-if="run.explanation">
-                            <span class="text-opposite/50 text-sm"> Explanation on why the workflow was not
-                                completed:</span> <span class=" font-bold text-opposite"> {{
-                                    run.explanation.explanation }}</span>
-                        </div>
-
-                        <div v-if="run.status === 'awaiting_action'"
-                            class="text-sm text-opposite/80 bg-secondary rounded border border-gray-800 p-3">
-                            <span class="text-opposite/50">Awaiting Action Step:</span> {{ getAwaitingActionStep(run) ||
-                                '-' }}
-                        </div>
-
-                        <div v-if="run.status === 'awaiting_action' && getAwaitingActionRoute(run)" class="pt-1">
-                            <a class="text-blue-400 hover:text-blue-300 text-sm p-0"
-                                :href="(getAwaitingActionRoute(run) as string)" target="_blank">
-                                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>
-                                Manually Approve
-                            </a>
-                        </div>
-                        <div v-if="getCompletedRoute(run)" class="pt-1"> <a
-                                class="text-blue-400 hover:text-blue-300 text-sm p-0 cursor-pointer"
-                                :href="(getCompletedRoute(run) as string)" target="_blank">
-                                <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>
-                                View Details
-                            </a></div>
-
-                    </div>
                     <div v-if="totalCount > 10"
                         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm text-opposite/70 bg-main rounded-lg border border-gray-800 px-4 py-3">
                         <span>
@@ -106,7 +58,6 @@
                             <label class="inline-flex items-center gap-2">
                                 <Select2 v-model.number="perPage" :values="perPageOptions"
                                     :display="(value: number) => value.toString()" placeholder="Per page" />
-
                             </label>
                             <div class="flex items-center gap-1">
                                 <AppButton type="button" buttonStyle="secondary" :disabled="currentPage <= 1"
@@ -137,13 +88,10 @@ import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
-import { formatDate, formatIfTimestamp } from '@/util/util'
 import { getWorkflowRuns } from '@/components/automation/endpoints'
 import type { WorkflowRun } from '@/components/automation/workflow.interface'
+import WorkflowRunCard from '@/components/automation/WorkflowRunCard.vue'
 import Select2 from '../Select2.vue'
-import { getAwaitingActionRoute, getAwaitingActionStep, getCompletedRoute } from './dto'
-
-
 
 const route = useRoute()
 const router = useRouter()
@@ -177,27 +125,11 @@ const rangeEnd = computed(() => {
     return Math.min(currentPage.value * perPage.value, totalCount.value)
 })
 
-
 const crumbs = computed(() => ([
     { name: 'Automation', path: '/automation/workflows', icon: 'fa-solid fa-robot text-neutral-700 text-2xl' },
     { name: 'Workflows', path: '/automation/workflows' },
     { name: 'Workflow Runs', path: '' },
 ]))
-
-const statusClass = (status: string) => {
-    if (status === 'awaiting_action') {
-        return 'text-amber-300 border-amber-500/50 bg-amber-500/10'
-    }
-    return 'text-opposite/70 border-gray-700 bg-transparent'
-}
-
-
-
-
-
-
-
-
 
 const loadRuns = async () => {
     loading.value = true

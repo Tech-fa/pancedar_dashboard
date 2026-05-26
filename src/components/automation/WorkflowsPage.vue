@@ -38,66 +38,49 @@
                 </div>
 
                 <div v-else class="space-y-3">
-                    <div v-for="wf in workflows" :key="wf.id"
-                        class="bg-main rounded-md border border-gray-700/80 p-5 flex items-start justify-between gap-4 transition-all duration-200 hover:border-gray-500 hover:shadow-md hover:shadow-black/20">
-                        <div class="min-w-0">
-                            <div class="text-opposite font-semibold text-base truncate">{{
-                                capitalizeFirstLetter(wf.name) }}</div>
-                            <div class="text-opposite/50 font-semibold text-xs truncate">{{ wf.workflowType }}</div>
-                            <div v-if="wf.description" class="text-sm text-opposite/80 mt-1">
-                                {{ wf.description }}
-                            </div>
-                            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-opposite/45">
-                                <span v-if="wf.createdAt">Created: {{ formatDate(wf.createdAt) }}</span>
-                                <span v-if="wf.updatedAt">Updated: {{ formatDate(wf.updatedAt) }}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-2 flex-wrap justify-end shrink-0">
-                            <Can :subject="'workflows'" :actions="['create']">
-                                <AppButton v-if="wf.actionUrl" buttonStyle="void"
-                                    class="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
-                                    :loading="triggeringWorkflowId === wf.id"
-                                    :warnBefore="'Run Workflow now? This will trigger the workflow and cannot be undone.'"
-                                    @click="triggerWorkflowConfirmed(wf)">
-                                    <i class="fa-solid fa-play"></i>
-                                    <span>Run Workflow</span>
+                    <WorkflowCard v-for="wf in workflows" :key="wf.id" :workflow="wf">
+                        <Can :subject="'workflows'" :actions="['create']">
+                            <AppButton v-if="wf.actionUrl" buttonStyle="void"
+                                class="text-emerald-500 hover:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                :loading="triggeringWorkflowId === wf.id"
+                                :warnBefore="wf.actionFields?.length ? undefined : 'Run Workflow now? This will trigger the workflow and cannot be undone.'"
+                                @click="triggerWorkflowConfirmed(wf)">
+                                <i class="fa-solid fa-play"></i>
+                                <span>Run Workflow</span>
+                            </AppButton>
+                        </Can>
+                        <Can :subject="'workflows'" :actions="['read']">
+                            <div class="flex items-center gap-2">
+                                <AppButton buttonStyle="void"
+                                    class="text-purple-500 hover:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                    @click="viewWorkflowRuns(wf)">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                    <span>History</span>
                                 </AppButton>
-                            </Can>
-                            <Can :subject="'workflows'" :actions="['read']">
-                                <div class="flex items-center gap-2">
-                                    <AppButton buttonStyle="void"
-                                        class="text-purple-500 hover:text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 hover:border-purple-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
-                                        @click="viewWorkflowRuns(wf)">
-                                        <i class="fa-solid fa-clock-rotate-left"></i>
-                                        <span>History</span>
-                                    </AppButton>
-                                    <AppButton buttonStyle="void"
-                                        class="text-amber-500 hover:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
-                                        @click="viewWorkflowRunsKanban(wf)">
-                                        <i class="fa-solid fa-table-columns"></i>
-                                        <span>Kanban</span>
-                                    </AppButton>
-                                    <AppButton buttonStyle="void"
-                                        class="text-blue-500 hover:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
-                                        @click="viewWorkflow(wf)">
-                                        <i class="fa-solid fa-eye"></i>
-                                        <span>View</span>
-                                    </AppButton>
-                                </div>
-                            </Can>
-                            <Can :subject="'workflows'" :actions="['delete']">
-                                <div class="flex items-center gap-2">
-                                    <AppButton buttonStyle="void"
-                                        class="text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
-                                        :warnBefore="`Are you sure you want to delete workflow &quot;${wf.name}&quot;?`"
-                                        @click="deleteWorkflowConfirmed(wf)">
-                                        <i class="fa-solid fa-trash"></i>
-                                        <span>Delete</span>
-                                    </AppButton>
-                                </div>
-                            </Can>
-                        </div>
-                    </div>
+                                <AppButton buttonStyle="void"
+                                    class="text-amber-500 hover:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                    @click="viewWorkflowRunsKanban(wf)">
+                                    <i class="fa-solid fa-table-columns"></i>
+                                    <span>Kanban</span>
+                                </AppButton>
+                                <AppButton buttonStyle="void"
+                                    class="text-blue-500 hover:text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                    @click="viewWorkflow(wf)">
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View</span>
+                                </AppButton>
+                            </div>
+                        </Can>
+                        <Can :subject="'workflows'" :actions="['delete']">
+                            <AppButton buttonStyle="void"
+                                class="text-red-500 hover:text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-400/60 rounded-md px-3 py-1.5 text-xs font-medium inline-flex items-center gap-2 transition-colors"
+                                :warnBefore="`Are you sure you want to delete workflow &quot;${wf.name}&quot;?`"
+                                @click="deleteWorkflowConfirmed(wf)">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Delete</span>
+                            </AppButton>
+                        </Can>
+                    </WorkflowCard>
                 </div>
             </div>
         </div>
@@ -112,7 +95,6 @@ import AppButton from '@/components/AppButton.vue'
 import Spinner from '@/components/Spinner.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
-import { capitalizeFirstLetter, formatDate } from '@/util/util'
 import {
     getWorkflows,
     deleteWorkflow,
@@ -120,6 +102,9 @@ import {
     triggerWorkflow,
 } from '@/components/automation/endpoints'
 import type { Workflow } from '@/components/automation/workflow.interface'
+import WorkflowActionDialog from '@/components/automation/WorkflowActionDialog.vue'
+import WorkflowCard from '@/components/automation/WorkflowCard.vue'
+import { useDialog } from '@/stores/dialog'
 import Can from '../Can.vue'
 
 const crumbs = [
@@ -130,6 +115,7 @@ const crumbs = [
 const router = useRouter()
 const authStore = useAuthStore()
 const toast = useToast()
+const dialog = useDialog()
 
 const workflows = ref<Workflow[]>([])
 const loadingWorkflows = ref(false)
@@ -166,11 +152,11 @@ const deleteWorkflowConfirmed = async (wf: Workflow) => {
     }
 }
 
-const triggerWorkflowConfirmed = async (wf: Workflow) => {
+const runWorkflow = async (wf: Workflow, extraBody: Record<string, unknown> = {}) => {
     if (!wf.actionUrl) return
     triggeringWorkflowId.value = wf.id
     try {
-        const result = await triggerWorkflow(wf.id, wf.actionUrl, authStore)
+        await triggerWorkflow(wf.id, wf.actionUrl, authStore, extraBody)
         toast.showToast(
             'Workflow started',
             `Started workflow ${wf.name}`,
@@ -180,12 +166,31 @@ const triggerWorkflowConfirmed = async (wf: Workflow) => {
     } catch (error: any) {
         toast.showToast(
             'Error',
-            error?.response?.data?.message || 'Failed to start scrape',
+            error?.response?.data?.message || 'Failed to start workflow',
             'error',
         )
     } finally {
         triggeringWorkflowId.value = null
     }
+}
+
+const triggerWorkflowConfirmed = (wf: Workflow) => {
+    if (!wf.actionUrl) return
+
+    if (wf.actionFields?.length) {
+        dialog.openDialog(WorkflowActionDialog, {
+            workflowName: wf.name,
+            fields: wf.actionFields,
+            onConfirm: async (values: Record<string, unknown>) => {
+                dialog.closeDialog()
+                await runWorkflow(wf, values)
+            },
+            onCancel: () => dialog.closeDialog(),
+        })
+        return
+    }
+
+    void runWorkflow(wf)
 }
 
 const deployLightsailsConfirmed = async () => {

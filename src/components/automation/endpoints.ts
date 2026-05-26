@@ -230,17 +230,18 @@ export const deployLightsails = (authStore: AuthStore) => {
   return apiPost<unknown>("/workflows/deploy-all-scrapers", {}, authStore);
 };
 
-/** Trigger Google Business scraper for a workflow (Maps URL + keywords come from workflow steps). */
+/** Trigger a workflow action endpoint (optional extra body from `actionFields`). */
 export const triggerWorkflow = (
   workflowId: string,
   actionUrl: string,
   authStore: AuthStore,
+  extraBody: Record<string, unknown> = {},
 ) => {
   return apiPost<{
     workflowRunId: string;
-    enqueued: number;
-    websiteUrls: string[];
-  }>(actionUrl, { workflowId }, authStore);
+    enqueued?: number;
+    websiteUrls?: string[];
+  }>(actionUrl, { workflowId, ...extraBody }, authStore);
 };
 
 export const reconnectConnector = (id: string, authStore: AuthStore) => {
