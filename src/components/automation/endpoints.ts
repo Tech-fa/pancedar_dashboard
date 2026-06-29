@@ -1,5 +1,5 @@
 import type { AuthStore, PaginatedResponse } from "@/util/interfaces";
-import { apiDelete, apiGet, apiPost, apiPut } from "@/util/api";
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "@/util/api";
 import type {
   AgentCommunication,
   AvailableWorkflow,
@@ -196,6 +196,7 @@ export interface LinkedInLead {
   outreachSummary: string | null;
   status: "pending" | "completed" | "failed" | "skipped";
   skipReason: string | null;
+  messaged: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -208,6 +209,18 @@ export const getLinkedInLeads = (
     "/linkedin-search-outreach/leads",
     authStore,
     params,
+  );
+};
+
+export const setLinkedInLeadMessaged = (
+  leadId: string,
+  messaged: boolean,
+  authStore: AuthStore,
+) => {
+  return apiPatch<LinkedInLead>(
+    `/linkedin-search-outreach/leads/${leadId}/messaged`,
+    { messaged },
+    authStore,
   );
 };
 

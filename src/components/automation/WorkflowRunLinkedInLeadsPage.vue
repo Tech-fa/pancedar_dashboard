@@ -70,9 +70,18 @@
                                     {{ lead.position }}
                                 </div>
                             </div>
-                            <div class="text-xs uppercase tracking-wide px-2 py-1 rounded border shrink-0"
-                                :class="statusClass(lead.status)">
-                                {{ lead.status }}
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                <button type="button"
+                                    class="text-xs uppercase tracking-wide px-2 py-1 rounded border transition-colors disabled:opacity-50"
+                                    :class="messagedClass(lead.messaged)"
+                                    :disabled="updatingLeadId === lead.id"
+                                    @click="toggleMessaged(lead)">
+                                    {{ lead.messaged ? 'Messaged' : 'Not messaged' }}
+                                </button>
+                                <div class="text-xs uppercase tracking-wide px-2 py-1 rounded border"
+                                    :class="statusClass(lead.status)">
+                                    {{ lead.status }}
+                                </div>
                             </div>
                         </div>
 
@@ -132,6 +141,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/stores/notification'
 import {
     getLinkedInLeads,
+    setLinkedInLeadMessaged,
     type LinkedInLead,
 } from '@/components/automation/endpoints'
 import { formatDateToTime } from '@/util/util'
@@ -146,6 +156,7 @@ const runId = computed(() => route.params.runId as string)
 const loading = ref(false)
 const leads = ref<LinkedInLead[]>([])
 const selectedStatus = ref<LinkedInLead['status'] | null>(null)
+const updatingLeadId = ref<string | null>(null)
 
 const statusCounts = computed(() => {
     const counts = new Map<LinkedInLead['status'], number>()
@@ -169,6 +180,13 @@ const crumbs = computed(() => ([
     { name: 'Workflow Runs', path: '/automation/workflows' },
     { name: 'LinkedIn leads', path: '' },
 ]))
+
+const messagedClass = (messaged: boolean) => {
+    if (messaged) {
+        return 'text-sky-300 border-sky-500/50 bg-sky-500/10 hover:bg-sky-500/20'
+    }
+    return 'text-opposite/70 border-gray-700 bg-transparent hover:border-gray-600 hover:bg-secondary'
+}
 
 const statusClass = (status: LinkedInLead['status']) => {
     if (status === 'completed') {
@@ -198,6 +216,25 @@ const statusFilterActiveClass = (status: LinkedInLead['status']) => {
 
 const toggleStatus = (status: LinkedInLead['status']) => {
     selectedStatus.value = selectedStatus.value === status ? null : status
+}
+
+const toggleMessaged = async (lead: LinkedInLead) => {
+    if (updatingLeadId.value === lead.id) {
+        return
+    }
+
+    updatingLeadId.value = lead.id
+    const nextMessaged = !lead.messaged
+    try {
+        const updated = await setLinkedInLeadMessaged(lead.id, nextMessaged, authStore)
+        leads.value = leads.value.map((item) =>
+            item.id === lead.id ? { ...item, ...updated } : item,
+        )
+    } catch {
+        toast.showToast('Error', 'Failed to update messaged status', 'error')
+    } finally {
+        updatingLeadId.value = null
+    }
 }
 
 const load = async () => {
